@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 
 interface MenuItem {
@@ -34,18 +34,42 @@ const MenuPage = () => {
   const [items, setItems] = useState(initialMenu);
   const [filter, setFilter] = useState("All");
   const [showAdd, setShowAdd] = useState(false);
-  const [newItem, setNewItem] = useState({ name: "", price: "", category: "Coffee", cost: "" });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({ name: "", price: "", category: "Coffee", cost: "" });
 
   const filtered = filter === "All" ? items : items.filter((i) => i.category === filter);
 
+  const resetForm = () => {
+    setFormData({ name: "", price: "", category: "Coffee", cost: "" });
+    setShowAdd(false);
+    setEditingId(null);
+  };
+
   const handleAdd = () => {
-    if (!newItem.name || !newItem.price) return;
+    if (!formData.name || !formData.price) return;
     setItems((prev) => [
       ...prev,
-      { id: Date.now(), name: newItem.name, price: Number(newItem.price), category: newItem.category, cost: Number(newItem.cost) || 0 },
+      { id: Date.now(), name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 },
     ]);
-    setNewItem({ name: "", price: "", category: "Coffee", cost: "" });
-    setShowAdd(false);
+    resetForm();
+  };
+
+  const handleEdit = (item: MenuItem) => {
+    setEditingId(item.id);
+    setFormData({ name: item.name, price: String(item.price), category: item.category, cost: String(item.cost) });
+    setShowAdd(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!formData.name || !formData.price || !editingId) return;
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === editingId
+          ? { ...i, name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 }
+          : i
+      )
+    );
+    resetForm();
   };
 
   const handleDelete = (id: number) => setItems((prev) => prev.filter((i) => i.id !== id));
@@ -56,7 +80,7 @@ const MenuPage = () => {
         title="Menu"
         action={
           <button
-            onClick={() => setShowAdd(true)}
+            onClick={() => { resetForm(); setShowAdd(true); }}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-soft"
           >
             <Plus size={16} /> Add Item
@@ -82,41 +106,48 @@ const MenuPage = () => {
         <div className="px-4 mb-4 animate-slide-up">
           <div className="glass shadow-card rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold">New Menu Item</span>
-              <button onClick={() => setShowAdd(false)}><X size={18} className="text-muted-foreground" /></button>
+              <span className="text-sm font-semibold">{editingId ? "Edit Menu Item" : "New Menu Item"}</span>
+              <button onClick={resetForm}><X size={18} className="text-muted-foreground" /></button>
             </div>
             <div className="space-y-2">
               <input
                 placeholder="Item name"
-                value={newItem.name}
-                onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
               />
-              <div className="flex gap-2">
+              <div>
                 <input
-                  placeholder="Price (₵)"
+                  placeholder="Selling Price (₵)"
                   type="number"
-                  value={newItem.price}
-                  onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                  className="flex-1 px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
                 />
+                <p className="text-[10px] text-muted-foreground mt-1 px-1">What the customer pays</p>
+              </div>
+              <div>
                 <input
-                  placeholder="Cost (₵)"
+                  placeholder="Ingredient Cost (₵)"
                   type="number"
-                  value={newItem.cost}
-                  onChange={(e) => setNewItem({ ...newItem, cost: e.target.value })}
-                  className="flex-1 px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
+                  value={formData.cost}
+                  onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                  className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
                 />
+                <p className="text-[10px] text-muted-foreground mt-1 px-1">What it costs you to make (for profit tracking)</p>
               </div>
               <select
-                value={newItem.category}
-                onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none"
               >
                 {categories.filter((c) => c !== "All").map((c) => <option key={c}>{c}</option>)}
               </select>
-              <button onClick={handleAdd} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">
-                Add to Menu
+              <button
+                onClick={editingId ? handleSaveEdit : handleAdd}
+                className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2"
+              >
+                {editingId ? <><Check size={16} /> Save Changes</> : <>Add to Menu</>}
               </button>
             </div>
           </div>
@@ -137,10 +168,13 @@ const MenuPage = () => {
                   {item.category}
                 </span>
               </div>
-              <div className="text-xs text-muted-foreground">Cost: ₵{item.cost.toFixed(2)}</div>
+              <div className="text-xs text-muted-foreground">Ingredient cost: ₵{item.cost.toFixed(2)} · Profit: ₵{(item.price - item.cost).toFixed(2)}</div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <span className="text-base font-bold text-accent">₵{item.price.toFixed(2)}</span>
+              <button onClick={() => handleEdit(item)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors">
+                <Pencil size={14} className="text-muted-foreground" />
+              </button>
               <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
                 <Trash2 size={14} className="text-destructive" />
               </button>
