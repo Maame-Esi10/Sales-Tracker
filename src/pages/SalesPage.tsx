@@ -1,27 +1,24 @@
 import { useState } from "react";
 import { Plus, Clock, CreditCard, Smartphone, Banknote, ArrowLeft, Minus, ShoppingBag } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import ReceiptView from "@/components/ReceiptView";
 
-interface Sale {
+interface SaleDetail {
   id: string;
-  items: number;
+  items: { name: string; price: number; qty: number }[];
   total: number;
   method: "Cash" | "MoMo" | "Card";
   time: string;
+  customerType: string;
+  date: string;
 }
 
-interface OrderItem {
-  name: string;
-  price: number;
-  qty: number;
-}
-
-const mockSales: Sale[] = [
-  { id: "ORD-0041", items: 3, total: 85.0, method: "MoMo", time: "2 min ago" },
-  { id: "ORD-0040", items: 1, total: 25.0, method: "Cash", time: "18 min ago" },
-  { id: "ORD-0039", items: 5, total: 142.5, method: "Card", time: "34 min ago" },
-  { id: "ORD-0038", items: 2, total: 55.0, method: "MoMo", time: "1 hr ago" },
-  { id: "ORD-0037", items: 4, total: 98.0, method: "Cash", time: "1 hr ago" },
+const mockSales: SaleDetail[] = [
+  { id: "ORD-0041", items: [{ name: "Latte", price: 25, qty: 2 }, { name: "Jollof Rice", price: 35, qty: 1 }], total: 85.0, method: "MoMo", time: "2 min ago", customerType: "Walk-in", date: "27 Feb 2026, 10:32 AM" },
+  { id: "ORD-0040", items: [{ name: "Espresso", price: 18, qty: 1 }, { name: "Meat Pie", price: 15, qty: 1 }], total: 33.0, method: "Cash", time: "18 min ago", customerType: "Table", date: "27 Feb 2026, 10:14 AM" },
+  { id: "ORD-0039", items: [{ name: "Cappuccino", price: 28, qty: 2 }, { name: "Fried Rice", price: 38, qty: 1 }, { name: "Chocolate Cake", price: 22, qty: 2 }], total: 138.0, method: "Card", time: "34 min ago", customerType: "Walk-in", date: "27 Feb 2026, 09:58 AM" },
+  { id: "ORD-0038", items: [{ name: "Latte", price: 25, qty: 1 }, { name: "Waakye", price: 30, qty: 1 }], total: 55.0, method: "MoMo", time: "1 hr ago", customerType: "Online", date: "27 Feb 2026, 09:30 AM" },
+  { id: "ORD-0037", items: [{ name: "Cappuccino", price: 28, qty: 2 }, { name: "Meat Pie", price: 15, qty: 2 }, { name: "Espresso", price: 18, qty: 1 }], total: 104.0, method: "Cash", time: "1 hr ago", customerType: "Walk-in", date: "27 Feb 2026, 09:12 AM" },
 ];
 
 const menuItems = [
@@ -46,7 +43,10 @@ const paymentIcon = (method: string) => {
 const SalesPage = () => {
   const [showNewSale, setShowNewSale] = useState(false);
   const [customerType, setCustomerType] = useState("Walk-in");
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [orderItems, setOrderItems] = useState<{ name: string; price: number; qty: number }[]>([]);
+  const [sales, setSales] = useState<SaleDetail[]>(mockSales);
+  const [receiptSale, setReceiptSale] = useState<SaleDetail | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"Cash" | "MoMo" | "Card">("Cash");
 
   const addItem = (name: string, price: number) => {
     setOrderItems((prev) => {
@@ -64,6 +64,23 @@ const SalesPage = () => {
 
   const total = orderItems.reduce((sum, i) => sum + i.price * i.qty, 0);
 
+  const handleSaveSale = () => {
+    if (orderItems.length === 0) return;
+    const newSale: SaleDetail = {
+      id: `ORD-${String(sales.length + 41).padStart(4, "0")}`,
+      items: [...orderItems],
+      total,
+      method: paymentMethod,
+      time: "Just now",
+      customerType,
+      date: new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true }),
+    };
+    setSales((prev) => [newSale, ...prev]);
+    setReceiptSale(newSale);
+    setShowNewSale(false);
+    setOrderItems([]);
+  };
+
   if (showNewSale) {
     return (
       <div className="min-h-screen pb-32">
@@ -77,16 +94,8 @@ const SalesPage = () => {
         <div className="px-4 mb-4">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Customer Type</label>
           <div className="flex gap-2">
-            {["Walk-in", "Table", "Online"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setCustomerType(t)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  customerType === t ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-                }`}
-              >
-                {t}
-              </button>
+            {(["Walk-in", "Table", "Online"] as const).map((t) => (
+              <button key={t} onClick={() => setCustomerType(t)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${customerType === t ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>{t}</button>
             ))}
           </div>
         </div>
@@ -95,11 +104,7 @@ const SalesPage = () => {
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Add Items</label>
           <div className="grid grid-cols-2 gap-2">
             {menuItems.map((item) => (
-              <button
-                key={item.name}
-                onClick={() => addItem(item.name, item.price)}
-                className="glass shadow-soft rounded-xl p-3 text-left hover:shadow-card transition-shadow"
-              >
+              <button key={item.name} onClick={() => addItem(item.name, item.price)} className="glass shadow-soft rounded-xl p-3 text-left hover:shadow-card transition-shadow">
                 <div className="text-sm font-semibold">{item.name}</div>
                 <div className="text-xs text-accent font-medium">₵{item.price.toFixed(2)}</div>
               </button>
@@ -135,17 +140,18 @@ const SalesPage = () => {
               <span className="text-sm text-muted-foreground">Total</span>
               <span className="text-2xl font-bold text-display">₵{total.toFixed(2)}</span>
             </div>
+            <div className="mb-3 flex gap-2">
+              {(["Cash", "MoMo", "Card"] as const).map((m) => (
+                <button key={m} onClick={() => setPaymentMethod(m)} className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${paymentMethod === m ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"}`}>
+                  {m}
+                </button>
+              ))}
+            </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => { setShowNewSale(false); setOrderItems([]); }}
-                className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98]"
-              >
+              <button onClick={handleSaveSale} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98]">
                 Save Sale
               </button>
-              <button
-                onClick={() => { setShowNewSale(false); setOrderItems([]); }}
-                className="py-3 px-4 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm"
-              >
+              <button onClick={() => { setShowNewSale(false); setOrderItems([]); }} className="py-3 px-4 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm">
                 Draft
               </button>
             </div>
@@ -155,17 +161,15 @@ const SalesPage = () => {
     );
   }
 
+  const todayTotal = sales.reduce((s, sale) => s + sale.total, 0);
+
   return (
     <div className="min-h-screen pb-24">
       <PageHeader
         title="Sales"
         action={
-          <button
-            onClick={() => setShowNewSale(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-soft transition-all hover:opacity-90 active:scale-[0.98]"
-          >
-            <Plus size={16} />
-            New Sale
+          <button onClick={() => setShowNewSale(true)} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-soft transition-all hover:opacity-90 active:scale-[0.98]">
+            <Plus size={16} /> New Sale
           </button>
         }
       />
@@ -174,7 +178,7 @@ const SalesPage = () => {
         <div className="glass shadow-soft rounded-xl p-4 flex items-center justify-between">
           <div>
             <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Today's Sales</div>
-            <div className="text-2xl font-bold text-display mt-1">₵405.50</div>
+            <div className="text-2xl font-bold text-display mt-1">₵{todayTotal.toFixed(2)}</div>
           </div>
           <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
             <ShoppingBag className="text-accent" size={22} />
@@ -185,10 +189,11 @@ const SalesPage = () => {
       <div className="px-4">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Recent Orders</h2>
         <div className="space-y-2">
-          {mockSales.map((sale, i) => (
-            <div
+          {sales.map((sale, i) => (
+            <button
               key={sale.id}
-              className="glass shadow-soft rounded-xl p-4 flex items-center justify-between animate-slide-up"
+              onClick={() => setReceiptSale(sale)}
+              className="w-full glass shadow-soft rounded-xl p-4 flex items-center justify-between animate-slide-up text-left"
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <div className="flex-1">
@@ -199,16 +204,28 @@ const SalesPage = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{sale.items} items</span>
+                  <span>{sale.items.length} items</span>
                   <span>·</span>
                   <span className="flex items-center gap-0.5"><Clock size={10} />{sale.time}</span>
                 </div>
               </div>
               <span className="text-base font-bold text-accent">₵{sale.total.toFixed(2)}</span>
-            </div>
+            </button>
           ))}
         </div>
       </div>
+
+      {receiptSale && (
+        <ReceiptView
+          orderId={receiptSale.id}
+          items={receiptSale.items}
+          total={receiptSale.total}
+          method={receiptSale.method}
+          customerType={receiptSale.customerType}
+          date={receiptSale.date}
+          onClose={() => setReceiptSale(null)}
+        />
+      )}
     </div>
   );
 };
