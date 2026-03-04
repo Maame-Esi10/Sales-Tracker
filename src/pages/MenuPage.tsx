@@ -1,25 +1,8 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-
-interface MenuItem {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  cost: number;
-}
-
-const initialMenu: MenuItem[] = [
-  { id: 1, name: "Latte", price: 25, category: "Coffee", cost: 8 },
-  { id: 2, name: "Cappuccino", price: 28, category: "Coffee", cost: 9 },
-  { id: 3, name: "Espresso", price: 18, category: "Coffee", cost: 5 },
-  { id: 4, name: "Jollof Rice", price: 35, category: "Food", cost: 15 },
-  { id: 5, name: "Fried Rice", price: 38, category: "Food", cost: 16 },
-  { id: 6, name: "Meat Pie", price: 15, category: "Food", cost: 7 },
-  { id: 7, name: "Chocolate Cake", price: 22, category: "Desserts", cost: 10 },
-  { id: 8, name: "Fresh Juice", price: 20, category: "Drinks", cost: 8 },
-];
+import { useMenuItems } from "@/hooks/useStore";
+import { setMenuItems, type MenuItem } from "@/data/store";
 
 const categories = ["All", "Coffee", "Drinks", "Food", "Desserts"];
 
@@ -31,7 +14,7 @@ const categoryColor: Record<string, string> = {
 };
 
 const MenuPage = () => {
-  const [items, setItems] = useState(initialMenu);
+  const items = useMenuItems();
   const [filter, setFilter] = useState("All");
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -47,8 +30,8 @@ const MenuPage = () => {
 
   const handleAdd = () => {
     if (!formData.name || !formData.price) return;
-    setItems((prev) => [
-      ...prev,
+    setMenuItems([
+      ...items,
       { id: Date.now(), name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 },
     ]);
     resetForm();
@@ -62,8 +45,8 @@ const MenuPage = () => {
 
   const handleSaveEdit = () => {
     if (!formData.name || !formData.price || !editingId) return;
-    setItems((prev) =>
-      prev.map((i) =>
+    setMenuItems(
+      items.map((i) =>
         i.id === editingId
           ? { ...i, name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 }
           : i
@@ -72,17 +55,14 @@ const MenuPage = () => {
     resetForm();
   };
 
-  const handleDelete = (id: number) => setItems((prev) => prev.filter((i) => i.id !== id));
+  const handleDelete = (id: number) => setMenuItems(items.filter((i) => i.id !== id));
 
   return (
     <div className="min-h-screen pb-24">
       <PageHeader
         title="Menu"
         action={
-          <button
-            onClick={() => { resetForm(); setShowAdd(true); }}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-soft"
-          >
+          <button onClick={() => { resetForm(); setShowAdd(true); }} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-soft">
             <Plus size={16} /> Add Item
           </button>
         }
@@ -90,13 +70,7 @@ const MenuPage = () => {
 
       <div className="px-4 mb-4 flex gap-2 overflow-x-auto no-scrollbar">
         {categories.map((c) => (
-          <button
-            key={c}
-            onClick={() => setFilter(c)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-              filter === c ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-            }`}
-          >
+          <button key={c} onClick={() => setFilter(c)} className={`px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${filter === c ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
             {c}
           </button>
         ))}
@@ -110,43 +84,19 @@ const MenuPage = () => {
               <button onClick={resetForm}><X size={18} className="text-muted-foreground" /></button>
             </div>
             <div className="space-y-2">
-              <input
-                placeholder="Item name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
-              />
+              <input placeholder="Item name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
               <div>
-                <input
-                  placeholder="Selling Price (₵)"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                />
+                <input placeholder="Selling Price (₵)" type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
                 <p className="text-[10px] text-muted-foreground mt-1 px-1">What the customer pays</p>
               </div>
               <div>
-                <input
-                  placeholder="Ingredient Cost (₵)"
-                  type="number"
-                  value={formData.cost}
-                  onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                />
+                <input placeholder="Ingredient Cost (₵)" type="number" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
                 <p className="text-[10px] text-muted-foreground mt-1 px-1">What it costs you to make (for profit tracking)</p>
               </div>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none"
-              >
+              <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none">
                 {categories.filter((c) => c !== "All").map((c) => <option key={c}>{c}</option>)}
               </select>
-              <button
-                onClick={editingId ? handleSaveEdit : handleAdd}
-                className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2"
-              >
+              <button onClick={editingId ? handleSaveEdit : handleAdd} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2">
                 {editingId ? <><Check size={16} /> Save Changes</> : <>Add to Menu</>}
               </button>
             </div>
@@ -156,28 +106,18 @@ const MenuPage = () => {
 
       <div className="px-4 space-y-2">
         {filtered.map((item, i) => (
-          <div
-            key={item.id}
-            className="glass shadow-soft rounded-xl p-4 flex items-center justify-between animate-slide-up"
-            style={{ animationDelay: `${i * 40}ms` }}
-          >
+          <div key={item.id} className="glass shadow-soft rounded-xl p-4 flex items-center justify-between animate-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-semibold">{item.name}</span>
-                <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${categoryColor[item.category]}`}>
-                  {item.category}
-                </span>
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${categoryColor[item.category]}`}>{item.category}</span>
               </div>
               <div className="text-xs text-muted-foreground">Ingredient cost: ₵{item.cost.toFixed(2)} · Profit: ₵{(item.price - item.cost).toFixed(2)}</div>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base font-bold text-accent">₵{item.price.toFixed(2)}</span>
-              <button onClick={() => handleEdit(item)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors">
-                <Pencil size={14} className="text-muted-foreground" />
-              </button>
-              <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
-                <Trash2 size={14} className="text-destructive" />
-              </button>
+              <button onClick={() => handleEdit(item)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors"><Pencil size={14} className="text-muted-foreground" /></button>
+              <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"><Trash2 size={14} className="text-destructive" /></button>
             </div>
           </div>
         ))}

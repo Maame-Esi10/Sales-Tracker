@@ -1,4 +1,5 @@
 import { Printer, Share2, X } from "lucide-react";
+import { SHOP_NAME } from "@/data/store";
 
 interface ReceiptItem {
   name: string;
@@ -21,7 +22,7 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
 
   const handleShare = async () => {
     const text = [
-      "☕ CaféManager Receipt",
+      `☕ ${SHOP_NAME} Receipt`,
       `Order: ${orderId}`,
       `Date: ${date}`,
       `Customer: ${customerType}`,
@@ -35,9 +36,7 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
     ].join("\n");
 
     if (navigator.share) {
-      try {
-        await navigator.share({ title: `Receipt ${orderId}`, text });
-      } catch {}
+      try { await navigator.share({ title: `Receipt ${orderId}`, text }); } catch {}
     } else {
       await navigator.clipboard.writeText(text);
       alert("Receipt copied to clipboard!");
@@ -47,67 +46,39 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
   return (
     <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
       <div className="w-full max-w-md bg-card rounded-2xl shadow-card overflow-hidden print:shadow-none print:rounded-none">
-        {/* Header - hidden on print */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border print:hidden">
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-            <X size={20} />
-          </button>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors"><X size={20} /></button>
           <span className="text-base font-semibold">Receipt</span>
           <div className="flex gap-1">
-            <button onClick={handleShare} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-              <Share2 size={18} />
-            </button>
-            <button onClick={handlePrint} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-              <Printer size={18} />
-            </button>
+            <button onClick={handleShare} className="p-2 rounded-lg hover:bg-secondary transition-colors"><Share2 size={18} /></button>
+            <button onClick={handlePrint} className="p-2 rounded-lg hover:bg-secondary transition-colors"><Printer size={18} /></button>
           </div>
         </div>
 
-        {/* Receipt body */}
         <div className="px-6 py-6">
-          {/* Shop name */}
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-display">CaféManager</h2>
+            <h2 className="text-2xl font-bold text-display">{SHOP_NAME}</h2>
             <p className="text-sm text-muted-foreground mt-1">Accra, Ghana</p>
           </div>
 
-          {/* Dashed divider */}
           <div className="border-t border-dashed border-border mb-5" />
 
-          {/* Order info */}
           <div className="space-y-2 mb-5">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Order</span>
-              <span className="font-semibold">{orderId}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Date</span>
-              <span>{date}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Customer</span>
-              <span>{customerType}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Payment</span>
-              <span>{method}</span>
-            </div>
+            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Order</span><span className="font-semibold">{orderId}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Date</span><span>{date}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Customer</span><span>{customerType}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Payment</span><span>{method}</span></div>
           </div>
 
           <div className="border-t border-dashed border-border mb-5" />
 
-          {/* Items */}
           <div className="space-y-3 mb-5">
             <div className="flex justify-between text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              <span>Item</span>
-              <span>Amount</span>
+              <span>Item</span><span>Amount</span>
             </div>
             {items.map((item) => (
               <div key={item.name} className="flex justify-between text-base">
-                <span>
-                  <span className="text-muted-foreground">{item.qty}×</span>{" "}
-                  <span className="font-medium">{item.name}</span>
-                </span>
+                <span><span className="text-muted-foreground">{item.qty}×</span> <span className="font-medium">{item.name}</span></span>
                 <span className="font-semibold">₵{(item.price * item.qty).toFixed(2)}</span>
               </div>
             ))}
@@ -115,7 +86,6 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
 
           <div className="border-t border-dashed border-border mb-4" />
 
-          {/* Total */}
           <div className="flex justify-between items-center mb-6">
             <span className="text-base font-semibold uppercase tracking-wide">Total</span>
             <span className="text-3xl font-bold text-display">₵{total.toFixed(2)}</span>
@@ -123,25 +93,17 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
 
           <div className="border-t border-dashed border-border mb-5" />
 
-          {/* Footer */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Thank you for your patronage! 🙏</p>
-            <p className="text-xs text-muted-foreground mt-1">Powered by CaféManager</p>
+            <p className="text-xs text-muted-foreground mt-1">Powered by {SHOP_NAME}</p>
           </div>
         </div>
 
-        {/* Action buttons - hidden on print */}
         <div className="px-5 pb-5 flex gap-2 print:hidden">
-          <button
-            onClick={handleShare}
-            className="flex-1 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2"
-          >
+          <button onClick={handleShare} className="flex-1 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2">
             <Share2 size={16} /> Share
           </button>
-          <button
-            onClick={handlePrint}
-            className="flex-1 py-3.5 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm flex items-center justify-center gap-2"
-          >
+          <button onClick={handlePrint} className="flex-1 py-3.5 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm flex items-center justify-center gap-2">
             <Printer size={16} /> Print
           </button>
         </div>

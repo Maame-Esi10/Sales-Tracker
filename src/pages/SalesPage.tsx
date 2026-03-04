@@ -1,40 +1,10 @@
 import { useState } from "react";
-import { Plus, Clock, CreditCard, Smartphone, Banknote, ArrowLeft, Minus, ShoppingBag } from "lucide-react";
+import { Plus, Clock, CreditCard, Smartphone, Banknote, ArrowLeft, Minus, ShoppingBag, Printer, Pencil, X, Check } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import ReceiptView from "@/components/ReceiptView";
 import OrderDetailView from "@/components/OrderDetailView";
-
-interface SaleDetail {
-  id: string;
-  items: { name: string; price: number; qty: number }[];
-  total: number;
-  method: "Cash" | "MoMo" | "Card";
-  time: string;
-  customerType: string;
-  date: string;
-  waiter: string;
-}
-
-const mockSales: SaleDetail[] = [
-  { id: "ORD-0041", items: [{ name: "Latte", price: 25, qty: 2 }, { name: "Jollof Rice", price: 35, qty: 1 }], total: 85.0, method: "MoMo", time: "2 min ago", customerType: "Walk-in", date: "27 Feb 2026, 10:32 AM", waiter: "Ama" },
-  { id: "ORD-0040", items: [{ name: "Espresso", price: 18, qty: 1 }, { name: "Meat Pie", price: 15, qty: 1 }], total: 33.0, method: "Cash", time: "18 min ago", customerType: "Table", date: "27 Feb 2026, 10:14 AM", waiter: "Kwame" },
-  { id: "ORD-0039", items: [{ name: "Cappuccino", price: 28, qty: 2 }, { name: "Fried Rice", price: 38, qty: 1 }, { name: "Chocolate Cake", price: 22, qty: 2 }], total: 138.0, method: "Card", time: "34 min ago", customerType: "Walk-in", date: "27 Feb 2026, 09:58 AM", waiter: "Ama" },
-  { id: "ORD-0038", items: [{ name: "Latte", price: 25, qty: 1 }, { name: "Waakye", price: 30, qty: 1 }], total: 55.0, method: "MoMo", time: "1 hr ago", customerType: "Online", date: "27 Feb 2026, 09:30 AM", waiter: "Yaw" },
-  { id: "ORD-0037", items: [{ name: "Cappuccino", price: 28, qty: 2 }, { name: "Meat Pie", price: 15, qty: 2 }, { name: "Espresso", price: 18, qty: 1 }], total: 104.0, method: "Cash", time: "1 hr ago", customerType: "Walk-in", date: "27 Feb 2026, 09:12 AM", waiter: "Kwame" },
-];
-
-const waiters = ["Ama", "Kwame", "Yaw", "Abena", "Kofi"];
-
-const menuItems = [
-  { name: "Latte", price: 25 },
-  { name: "Cappuccino", price: 28 },
-  { name: "Espresso", price: 18 },
-  { name: "Jollof Rice", price: 35 },
-  { name: "Fried Rice", price: 38 },
-  { name: "Waakye", price: 30 },
-  { name: "Meat Pie", price: 15 },
-  { name: "Chocolate Cake", price: 22 },
-];
+import { useMenuItems, useStaffNames, useSales } from "@/hooks/useStore";
+import { setSales, setStaffNames, type SaleDetail } from "@/data/store";
 
 const paymentIcon = (method: string) => {
   switch (method) {
@@ -45,14 +15,22 @@ const paymentIcon = (method: string) => {
 };
 
 const SalesPage = () => {
+  const menuItems = useMenuItems();
+  const staffNames = useStaffNames();
+  const sales = useSales();
+
   const [showNewSale, setShowNewSale] = useState(false);
   const [customerType, setCustomerType] = useState("Walk-in");
-  const [selectedWaiter, setSelectedWaiter] = useState(waiters[0]);
+  const [selectedWaiter, setSelectedWaiter] = useState(staffNames[0] || "");
   const [orderItems, setOrderItems] = useState<{ name: string; price: number; qty: number }[]>([]);
-  const [sales, setSales] = useState<SaleDetail[]>(mockSales);
   const [receiptSale, setReceiptSale] = useState<SaleDetail | null>(null);
   const [detailSale, setDetailSale] = useState<SaleDetail | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "MoMo" | "Card">("Cash");
+  const [period, setPeriod] = useState("Today");
+
+  // Staff editing
+  const [editingStaff, setEditingStaff] = useState(false);
+  const [newStaffName, setNewStaffName] = useState("");
 
   const getItemQty = (name: string) => orderItems.find((i) => i.name === name)?.qty || 0;
 
@@ -78,10 +56,21 @@ const SalesPage = () => {
       waiter: selectedWaiter,
       date: new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true }),
     };
-    setSales((prev) => [newSale, ...prev]);
+    setSales([newSale, ...sales]);
     setDetailSale(newSale);
     setShowNewSale(false);
     setOrderItems([]);
+  };
+
+  const handleAddStaff = () => {
+    if (!newStaffName.trim() || staffNames.includes(newStaffName.trim())) return;
+    setStaffNames([...staffNames, newStaffName.trim()]);
+    setNewStaffName("");
+  };
+
+  const handleRemoveStaff = (name: string) => {
+    setStaffNames(staffNames.filter((n) => n !== name));
+    if (selectedWaiter === name) setSelectedWaiter(staffNames[0] || "");
   };
 
   // Order detail view
@@ -113,14 +102,40 @@ const SalesPage = () => {
           <h1 className="text-2xl font-bold text-display">New Sale</h1>
         </div>
 
-        {/* Waiter selection */}
+        {/* Waiter selection with edit option */}
         <div className="px-4 mb-4">
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Waiter / Waitress</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Waiter / Waitress</label>
+            <button onClick={() => setEditingStaff(!editingStaff)} className="text-xs text-accent font-medium flex items-center gap-1">
+              <Pencil size={12} /> {editingStaff ? "Done" : "Edit"}
+            </button>
+          </div>
           <div className="flex gap-2 flex-wrap">
-            {waiters.map((w) => (
-              <button key={w} onClick={() => setSelectedWaiter(w)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedWaiter === w ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"}`}>{w}</button>
+            {staffNames.map((w) => (
+              <div key={w} className="relative">
+                <button onClick={() => setSelectedWaiter(w)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedWaiter === w ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"}`}>{w}</button>
+                {editingStaff && (
+                  <button onClick={() => handleRemoveStaff(w)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
+                    <X size={10} />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
+          {editingStaff && (
+            <div className="flex gap-2 mt-2">
+              <input
+                value={newStaffName}
+                onChange={(e) => setNewStaffName(e.target.value)}
+                placeholder="New name..."
+                className="flex-1 px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30"
+                onKeyDown={(e) => e.key === "Enter" && handleAddStaff()}
+              />
+              <button onClick={handleAddStaff} className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium">
+                <Plus size={14} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Customer type */}
@@ -133,14 +148,14 @@ const SalesPage = () => {
           </div>
         </div>
 
-        {/* Menu items with +/- */}
+        {/* Menu items from shared store */}
         <div className="px-4 mb-4">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Add Items</label>
           <div className="space-y-2">
             {menuItems.map((item) => {
               const qty = getItemQty(item.name);
               return (
-                <div key={item.name} className="glass shadow-soft rounded-xl p-3 flex items-center justify-between">
+                <div key={item.id} className="glass shadow-soft rounded-xl p-3 flex items-center justify-between">
                   <div>
                     <div className="text-sm font-semibold">{item.name}</div>
                     <div className="text-xs text-accent font-medium">₵{item.price.toFixed(2)}</div>
@@ -181,11 +196,11 @@ const SalesPage = () => {
           </div>
         )}
 
-        {/* Fixed bottom bar */}
-        <div className="fixed bottom-0 left-0 right-0 px-4 pb-4 pt-2 bg-background/90 backdrop-blur-lg border-t border-border/40">
+        {/* Fixed bottom checkout bar */}
+        <div className="fixed bottom-0 left-0 right-0 px-4 pb-4 pt-2 bg-background/90 backdrop-blur-lg border-t border-border/40 z-[55]">
           <div className="max-w-lg mx-auto">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-muted-foreground">Total ({orderItems.length} items)</span>
+              <span className="text-sm text-muted-foreground">Total ({orderItems.reduce((s, i) => s + i.qty, 0)} items)</span>
               <span className="text-2xl font-bold text-display">₵{total.toFixed(2)}</span>
             </div>
             <div className="mb-3 flex gap-2">
@@ -196,8 +211,8 @@ const SalesPage = () => {
               ))}
             </div>
             <div className="flex gap-2">
-              <button onClick={handleSaveSale} disabled={orderItems.length === 0} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50">
-                Save Sale
+              <button onClick={handleSaveSale} disabled={orderItems.length === 0} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2">
+                <Check size={16} /> Checkout
               </button>
               <button onClick={() => { setShowNewSale(false); setOrderItems([]); }} className="py-3 px-4 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm">
                 Draft
@@ -222,10 +237,23 @@ const SalesPage = () => {
         }
       />
 
+      {/* Period filter */}
+      <div className="px-4 mb-3 flex gap-2">
+        {["Today", "Week", "Month", "All Time"].map((p) => (
+          <button
+            key={p}
+            onClick={() => setPeriod(p)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+
       <div className="px-4 mb-3">
         <div className="glass shadow-soft rounded-xl p-4 flex items-center justify-between">
           <div>
-            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Today's Sales</div>
+            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{period} Sales</div>
             <div className="text-2xl font-bold text-display mt-1">₵{todayTotal.toFixed(2)}</div>
           </div>
           <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">

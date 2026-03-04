@@ -1,4 +1,5 @@
 import { ArrowLeft, Clock, Printer, Share2 } from "lucide-react";
+import { SHOP_NAME } from "@/data/store";
 
 interface OrderItem {
   name: string;
@@ -34,7 +35,10 @@ const OrderDetailView = ({ orderId, items, total, method, customerType, date, ti
         </div>
       </div>
 
-      {/* Info cards */}
+      <div className="px-4 mb-1">
+        <p className="text-xs text-muted-foreground">{SHOP_NAME}</p>
+      </div>
+
       <div className="px-4 mb-4 grid grid-cols-2 gap-2">
         <div className="glass shadow-soft rounded-xl p-3">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Customer</div>
@@ -52,7 +56,6 @@ const OrderDetailView = ({ orderId, items, total, method, customerType, date, ti
         )}
       </div>
 
-      {/* Items list */}
       <div className="px-4 mb-4">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Items</h2>
         <div className="glass shadow-soft rounded-xl divide-y divide-border">
@@ -68,7 +71,6 @@ const OrderDetailView = ({ orderId, items, total, method, customerType, date, ti
         </div>
       </div>
 
-      {/* Total */}
       <div className="px-4 mb-6">
         <div className="glass shadow-soft rounded-xl p-4 flex items-center justify-between">
           <span className="text-sm font-semibold uppercase tracking-wide">Total</span>
@@ -76,18 +78,11 @@ const OrderDetailView = ({ orderId, items, total, method, customerType, date, ti
         </div>
       </div>
 
-      {/* Actions */}
       <div className="px-4 flex gap-2">
-        <button
-          onClick={onViewReceipt}
-          className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2"
-        >
+        <button onClick={onViewReceipt} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2">
           <Printer size={16} /> View Receipt
         </button>
-        <button
-          onClick={onViewReceipt}
-          className="py-3 px-5 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm flex items-center justify-center gap-2"
-        >
+        <button onClick={onViewReceipt} className="py-3 px-5 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm flex items-center justify-center gap-2">
           <Share2 size={16} />
         </button>
       </div>
