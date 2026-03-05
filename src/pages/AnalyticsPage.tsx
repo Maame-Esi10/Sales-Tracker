@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { TrendingUp, ShoppingBag, Receipt, DollarSign } from "lucide-react";
+import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import MetricCard from "@/components/MetricCard";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { useSales } from "@/hooks/useStore";
-import { SHOP_NAME } from "@/data/store";
 
-const COLORS = ["hsl(30 55% 50%)", "hsl(25 40% 22%)", "hsl(145 50% 42%)", "hsl(38 90% 55%)", "hsl(0 65% 52%)"];
+const COLORS = ["hsl(270 55% 50%)", "hsl(38 75% 55%)", "hsl(145 50% 42%)", "hsl(0 65% 52%)", "hsl(200 60% 50%)"];
 
 const salesData = [
   { day: "Mon", sales: 320 },
@@ -25,7 +25,6 @@ const AnalyticsPage = () => {
   const totalSales = sales.reduce((s, sale) => s + sale.total, 0);
   const orderCount = sales.length;
 
-  // Top selling items
   const itemCounts: Record<string, number> = {};
   const itemRevenue: Record<string, number> = {};
   sales.forEach((sale) => {
@@ -39,12 +38,10 @@ const AnalyticsPage = () => {
     .sort((a, b) => b.sold - a.sold)
     .slice(0, 5);
 
-  // Payment method breakdown
   const methodCounts: Record<string, number> = {};
   sales.forEach((s) => { methodCounts[s.method] = (methodCounts[s.method] || 0) + 1; });
   const paymentData = Object.entries(methodCounts).map(([name, value]) => ({ name, value }));
 
-  // Waiter performance (sales-only, no wages)
   const waiterSales: Record<string, { count: number; total: number }> = {};
   sales.forEach((s) => {
     if (s.waiter) {
@@ -58,20 +55,16 @@ const AnalyticsPage = () => {
     <div className="min-h-screen pb-24">
       <PageHeader title="Analytics" />
 
-      <div className="px-4 mb-1">
-        <p className="text-xs text-muted-foreground">{SHOP_NAME}</p>
-      </div>
-
       <div className="px-4 mb-4 flex gap-2">
         {["Today", "Week", "Month", "All Time"].map((p) => (
-          <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
+          <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
             {p}
           </button>
         ))}
       </div>
 
       <div className="px-4 grid grid-cols-2 gap-2 mb-6">
-        <MetricCard label="Total Sales" value={`₵${totalSales.toFixed(0)}`} icon={<DollarSign size={18} />} trend="+12.5%" trendUp />
+        <MetricCard label="Total Sales" value={`₵${totalSales.toFixed(0)}`} icon={<DollarSign size={18} />} trend="+12.5%" trendUp gradient />
         <MetricCard label="Orders" value={String(orderCount)} icon={<ShoppingBag size={18} />} trend="+8%" trendUp />
         <MetricCard label="Avg Order" value={`₵${orderCount > 0 ? (totalSales / orderCount).toFixed(0) : "0"}`} icon={<Receipt size={18} />} />
         <MetricCard label="Net Profit" value={`₵${totalSales.toFixed(0)}`} icon={<TrendingUp size={18} />} trend="+18%" trendUp />
@@ -83,11 +76,11 @@ const AnalyticsPage = () => {
         <div className="glass shadow-soft rounded-xl p-4">
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={salesData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(30 15% 89%)" />
-              <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(25 10% 48%)" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "hsl(25 10% 48%)" }} axisLine={false} tickLine={false} width={35} />
-              <Tooltip contentStyle={{ background: "hsl(30 20% 99%)", border: "1px solid hsl(30 15% 89%)", borderRadius: "12px", fontSize: "12px" }} />
-              <Line type="monotone" dataKey="sales" stroke="hsl(30 55% 50%)" strokeWidth={2.5} dot={{ fill: "hsl(30 55% 50%)", r: 3 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(270 12% 89%)" />
+              <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(270 8% 48%)" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "hsl(270 8% 48%)" }} axisLine={false} tickLine={false} width={35} />
+              <Tooltip contentStyle={{ background: "hsl(270 15% 99%)", border: "1px solid hsl(270 12% 89%)", borderRadius: "12px", fontSize: "12px" }} />
+              <Line type="monotone" dataKey="sales" stroke="hsl(270 55% 50%)" strokeWidth={2.5} dot={{ fill: "hsl(270 55% 50%)", r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -101,9 +94,9 @@ const AnalyticsPage = () => {
             <>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={topItems} layout="vertical">
-                  <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(25 10% 48%)" }} axisLine={false} tickLine={false} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "hsl(25 10% 48%)" }} axisLine={false} tickLine={false} width={70} />
-                  <Bar dataKey="sold" fill="hsl(25 40% 22%)" radius={[0, 6, 6, 0]} barSize={16} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(270 8% 48%)" }} axisLine={false} tickLine={false} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "hsl(270 8% 48%)" }} axisLine={false} tickLine={false} width={70} />
+                  <Bar dataKey="sold" fill="hsl(270 45% 30%)" radius={[0, 6, 6, 0]} barSize={16} />
                 </BarChart>
               </ResponsiveContainer>
               <div className="mt-3 space-y-1.5">
@@ -152,34 +145,27 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* Staff Sales Performance (not wages) */}
+      {/* Staff Sales Performance */}
       <div className="px-4 mb-6">
-        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Staff Sales Performance</h2>
+        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Staff Performance</h2>
         <div className="glass shadow-soft rounded-xl divide-y divide-border">
-          {Object.entries(waiterSales).sort((a, b) => b[1].total - a[1].total).map(([name, data]) => (
-            <div key={name} className="flex items-center justify-between p-3">
-              <div>
-                <div className="text-sm font-semibold">{name}</div>
-                <div className="text-xs text-muted-foreground">{data.count} orders served</div>
+          {Object.entries(waiterSales).sort((a, b) => b[1].total - a[1].total).map(([name, data], i) => (
+            <motion.div key={name} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground" style={{ background: `linear-gradient(135deg, ${COLORS[i % COLORS.length]}, ${COLORS[(i + 1) % COLORS.length]})` }}>
+                  {name[0]}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">{name}</div>
+                  <div className="text-xs text-muted-foreground">{data.count} orders</div>
+                </div>
               </div>
               <span className="text-sm font-bold text-accent">₵{data.total.toFixed(2)}</span>
-            </div>
+            </motion.div>
           ))}
           {Object.keys(waiterSales).length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">No data yet</p>
           )}
-        </div>
-      </div>
-
-      {/* Summary cards */}
-      <div className="px-4 grid grid-cols-2 gap-2">
-        <div className="glass shadow-soft rounded-xl p-4">
-          <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Avg Order</div>
-          <div className="text-lg font-bold">₵{orderCount > 0 ? (totalSales / orderCount).toFixed(2) : "0.00"}</div>
-        </div>
-        <div className="glass shadow-soft rounded-xl p-4">
-          <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Top Item</div>
-          <div className="text-lg font-bold">{topItems[0]?.name || "—"}</div>
         </div>
       </div>
     </div>
