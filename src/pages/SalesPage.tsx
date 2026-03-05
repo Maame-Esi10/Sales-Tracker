@@ -6,6 +6,28 @@ import OrderDetailView from "@/components/OrderDetailView";
 import { useMenuItems, useStaffNames, useSales } from "@/hooks/useStore";
 import { setSales, setStaffNames, type SaleDetail } from "@/data/store";
 
+const parseDate = (dateStr: string): Date => {
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? new Date() : d;
+};
+
+const filterByPeriod = (sales: SaleDetail[], period: string): SaleDetail[] => {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  return sales.filter((sale) => {
+    if (period === "All Time") return true;
+    const d = parseDate(sale.date);
+    if (period === "Today") return d >= startOfDay;
+    if (period === "Week") return d >= startOfWeek;
+    if (period === "Month") return d >= startOfMonth;
+    return true;
+  });
+};
+
 const paymentIcon = (method: string) => {
   switch (method) {
     case "MoMo": return <Smartphone size={14} />;
@@ -73,8 +95,23 @@ const SalesPage = () => {
     if (selectedWaiter === name) setSelectedWaiter(staffNames[0] || "");
   };
 
+  // Receipt view
+  if (receiptSale) {
+    return (
+      <ReceiptView
+        orderId={receiptSale.id}
+        items={receiptSale.items}
+        total={receiptSale.total}
+        method={receiptSale.method}
+        customerType={receiptSale.customerType}
+        date={receiptSale.date}
+        onClose={() => setReceiptSale(null)}
+      />
+    );
+  }
+
   // Order detail view
-  if (detailSale && !receiptSale) {
+  if (detailSale) {
     return (
       <OrderDetailView
         orderId={detailSale.id}
@@ -215,7 +252,7 @@ const SalesPage = () => {
                 <Check size={16} /> Checkout
               </button>
               <button onClick={() => { setShowNewSale(false); setOrderItems([]); }} className="py-3 px-4 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm">
-                Draft
+                Cancel
               </button>
             </div>
           </div>
@@ -224,7 +261,8 @@ const SalesPage = () => {
     );
   }
 
-  const todayTotal = sales.reduce((s, sale) => s + sale.total, 0);
+  const filtered = filterByPeriod(sales, period);
+  const periodTotal = filtered.reduce((s, sale) => s + sale.total, 0);
 
   return (
     <div className="min-h-screen pb-24">
@@ -254,10 +292,13 @@ const SalesPage = () => {
         <div className="glass shadow-soft rounded-xl p-4 flex items-center justify-between">
           <div>
             <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{period} Sales</div>
-            <div className="text-2xl font-bold text-display mt-1">₵{todayTotal.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-display mt-1">₵{periodTotal.toFixed(2)}</div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-            <ShoppingBag className="text-accent" size={22} />
+          <div className="flex flex-col items-end">
+            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+              <ShoppingBag className="text-accent" size={22} />
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">{filtered.length} orders</div>
           </div>
         </div>
       </div>
@@ -265,7 +306,7 @@ const SalesPage = () => {
       <div className="px-4">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Recent Orders</h2>
         <div className="space-y-2">
-          {sales.map((sale, i) => (
+          {filtered.map((sale, i) => (
             <button
               key={sale.id}
               onClick={() => setDetailSale(sale)}
@@ -289,20 +330,11 @@ const SalesPage = () => {
               <span className="text-base font-bold text-accent">₵{sale.total.toFixed(2)}</span>
             </button>
           ))}
+          {filtered.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-8">No sales for this period</p>
+          )}
         </div>
       </div>
-
-      {receiptSale && (
-        <ReceiptView
-          orderId={receiptSale.id}
-          items={receiptSale.items}
-          total={receiptSale.total}
-          method={receiptSale.method}
-          customerType={receiptSale.customerType}
-          date={receiptSale.date}
-          onClose={() => setReceiptSale(null)}
-        />
-      )}
     </div>
   );
 };

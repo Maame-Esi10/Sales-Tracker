@@ -3,7 +3,7 @@ import { TrendingUp, ShoppingBag, Receipt, DollarSign } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import MetricCard from "@/components/MetricCard";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
-import { useSales, useExpenses } from "@/hooks/useStore";
+import { useSales } from "@/hooks/useStore";
 import { SHOP_NAME } from "@/data/store";
 
 const COLORS = ["hsl(30 55% 50%)", "hsl(25 40% 22%)", "hsl(145 50% 42%)", "hsl(38 90% 55%)", "hsl(0 65% 52%)"];
@@ -21,11 +21,8 @@ const salesData = [
 const AnalyticsPage = () => {
   const [period, setPeriod] = useState("Week");
   const sales = useSales();
-  const expenses = useExpenses();
 
   const totalSales = sales.reduce((s, sale) => s + sale.total, 0);
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const netProfit = totalSales - totalExpenses;
   const orderCount = sales.length;
 
   // Top selling items
@@ -47,12 +44,7 @@ const AnalyticsPage = () => {
   sales.forEach((s) => { methodCounts[s.method] = (methodCounts[s.method] || 0) + 1; });
   const paymentData = Object.entries(methodCounts).map(([name, value]) => ({ name, value }));
 
-  // Expense breakdown
-  const expCats: Record<string, number> = {};
-  expenses.forEach((e) => { expCats[e.category] = (expCats[e.category] || 0) + e.amount; });
-  const expenseBreakdown = Object.entries(expCats).sort((a, b) => b[1] - a[1]);
-
-  // Waiter performance
+  // Waiter performance (sales-only, no wages)
   const waiterSales: Record<string, { count: number; total: number }> = {};
   sales.forEach((s) => {
     if (s.waiter) {
@@ -81,8 +73,8 @@ const AnalyticsPage = () => {
       <div className="px-4 grid grid-cols-2 gap-2 mb-6">
         <MetricCard label="Total Sales" value={`₵${totalSales.toFixed(0)}`} icon={<DollarSign size={18} />} trend="+12.5%" trendUp />
         <MetricCard label="Orders" value={String(orderCount)} icon={<ShoppingBag size={18} />} trend="+8%" trendUp />
-        <MetricCard label="Expenses" value={`₵${totalExpenses.toFixed(0)}`} icon={<Receipt size={18} />} trend="+3%" trendUp={false} />
-        <MetricCard label="Net Profit" value={`₵${netProfit.toFixed(0)}`} icon={<TrendingUp size={18} />} trend={netProfit > 0 ? "+18%" : "-"} trendUp={netProfit > 0} />
+        <MetricCard label="Avg Order" value={`₵${orderCount > 0 ? (totalSales / orderCount).toFixed(0) : "0"}`} icon={<Receipt size={18} />} />
+        <MetricCard label="Net Profit" value={`₵${totalSales.toFixed(0)}`} icon={<TrendingUp size={18} />} trend="+18%" trendUp />
       </div>
 
       {/* Sales Trend */}
@@ -160,37 +152,22 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* Expense Breakdown */}
+      {/* Staff Sales Performance (not wages) */}
       <div className="px-4 mb-6">
-        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Expense Breakdown</h2>
-        <div className="glass shadow-soft rounded-xl p-4 space-y-2">
-          {expenseBreakdown.map(([cat, amount]) => (
-            <div key={cat} className="flex justify-between items-center">
-              <span className="text-sm">{cat}</span>
-              <div className="flex items-center gap-2">
-                <div className="w-24 h-2 rounded-full bg-secondary overflow-hidden">
-                  <div className="h-full rounded-full bg-destructive/70" style={{ width: `${(amount / totalExpenses) * 100}%` }} />
-                </div>
-                <span className="text-sm font-semibold text-destructive w-20 text-right">₵{amount.toFixed(0)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Waiter Performance */}
-      <div className="px-4 mb-6">
-        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Staff Performance</h2>
+        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Staff Sales Performance</h2>
         <div className="glass shadow-soft rounded-xl divide-y divide-border">
           {Object.entries(waiterSales).sort((a, b) => b[1].total - a[1].total).map(([name, data]) => (
             <div key={name} className="flex items-center justify-between p-3">
               <div>
                 <div className="text-sm font-semibold">{name}</div>
-                <div className="text-xs text-muted-foreground">{data.count} orders</div>
+                <div className="text-xs text-muted-foreground">{data.count} orders served</div>
               </div>
               <span className="text-sm font-bold text-accent">₵{data.total.toFixed(2)}</span>
             </div>
           ))}
+          {Object.keys(waiterSales).length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">No data yet</p>
+          )}
         </div>
       </div>
 

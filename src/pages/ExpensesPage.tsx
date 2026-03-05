@@ -11,16 +11,40 @@ const categoryIcons: Record<string, React.ReactNode> = {
   "Staff Wages": <Users size={16} />,
 };
 
+const parseDate = (dateStr: string): Date => {
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? new Date() : d;
+};
+
+const filterByPeriod = <T,>(items: T[], getDate: (item: T) => string, period: string): T[] => {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  return items.filter((item) => {
+    if (period === "All Time") return true;
+    const d = parseDate(getDate(item));
+    if (period === "Today") return d >= startOfDay;
+    if (period === "Week") return d >= startOfWeek;
+    if (period === "Month") return d >= startOfMonth;
+    return true;
+  });
+};
+
 const ExpensesPage = () => {
   const expenses = useExpenses();
   const [showAdd, setShowAdd] = useState(false);
-  const [showTally, setShowTally] = useState(false);
+  const [period, setPeriod] = useState("All Time");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [newExpense, setNewExpense] = useState({ category: "Ingredients", amount: "", note: "" });
 
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const filtered = filterByPeriod(expenses, (e) => e.date, period);
+  const totalExpenses = filtered.reduce((s, e) => s + e.amount, 0);
 
   // Category tallies
-  const categoryTotals = expenses.reduce<Record<string, number>>((acc, e) => {
+  const categoryTotals = filtered.reduce<Record<string, number>>((acc, e) => {
     acc[e.category] = (acc[e.category] || 0) + e.amount;
     return acc;
   }, {});
@@ -46,39 +70,85 @@ const ExpensesPage = () => {
         }
       />
 
+      {/* Period filter */}
+      <div className="px-4 mb-3 flex gap-2">
+        {["Today", "Week", "Month", "All Time"].map((p) => (
+          <button
+            key={p}
+            onClick={() => setPeriod(p)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+
       <div className="px-4 mb-4">
         <div className="glass shadow-soft rounded-xl p-4 flex items-center justify-between">
           <div>
-            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Expenses</div>
+            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{period} Expenses</div>
             <div className="text-2xl font-bold text-display mt-1">₵{totalExpenses.toFixed(2)}</div>
           </div>
-          <div className="text-xs text-muted-foreground">This month</div>
+          <div className="text-xs text-muted-foreground">{filtered.length} entries</div>
         </div>
       </div>
 
-      {/* Category Tally */}
+      {/* Category Breakdown with bar visualization */}
       <div className="px-4 mb-4">
-        <button onClick={() => setShowTally(!showTally)} className="w-full glass shadow-soft rounded-xl p-4 flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category Breakdown</span>
-          {showTally ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
-        </button>
-        {showTally && (
-          <div className="mt-2 space-y-2 animate-slide-up">
-            {Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).map(([cat, amount]) => (
-              <div key={cat} className="glass shadow-soft rounded-xl p-3 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-accent">
-                  {categoryIcons[cat] || <ShoppingCart size={16} />}
+        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Expense Breakdown</h2>
+        <div className="glass shadow-soft rounded-xl p-4 space-y-3">
+          {Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).map(([cat, amount]) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+              className={`w-full flex items-center justify-between p-2 rounded-lg transition-all ${selectedCategory === cat ? "bg-secondary" : "hover:bg-secondary/50"}`}
+            >
+              <div className="flex items-center gap-3 flex-1">
+                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-accent">
+                  {categoryIcons[cat] || <ShoppingCart size={14} />}
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-semibold">{cat}</div>
+                  <div className="w-full h-2 rounded-full bg-muted overflow-hidden mt-1">
+                    <div className="h-full rounded-full bg-destructive/70" style={{ width: `${totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0}%` }} />
+                  </div>
+                </div>
+              </div>
+              <div className="text-right ml-3">
+                <span className="text-sm font-bold text-destructive">₵{amount.toFixed(2)}</span>
+                <div className="text-[10px] text-muted-foreground">{totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(0) : 0}%</div>
+              </div>
+            </button>
+          ))}
+          {Object.keys(categoryTotals).length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-2">No expenses for this period</p>
+          )}
+        </div>
+      </div>
+
+      {/* Selected Category Detail */}
+      {selectedCategory && (
+        <div className="px-4 mb-4 animate-slide-up">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{selectedCategory} — {period}</h2>
+            <button onClick={() => setSelectedCategory(null)} className="text-xs text-accent font-medium">Hide</button>
+          </div>
+          <div className="space-y-2">
+            {filtered.filter((e) => e.category === selectedCategory).map((exp) => (
+              <div key={exp.id} className="glass shadow-soft rounded-xl p-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-accent">
+                  {categoryIcons[exp.category] || <ShoppingCart size={14} />}
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-semibold">{cat}</div>
-                  <div className="text-xs text-muted-foreground">{expenses.filter((e) => e.category === cat).length} entries</div>
+                  <div className="text-sm font-semibold">{exp.note || exp.category}</div>
+                  <div className="text-xs text-muted-foreground">{exp.date}</div>
                 </div>
-                <span className="text-base font-bold text-destructive">₵{amount.toFixed(2)}</span>
+                <span className="text-sm font-bold text-destructive">-₵{exp.amount.toFixed(2)}</span>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {showAdd && (
         <div className="px-4 mb-4 animate-slide-up">
@@ -101,7 +171,7 @@ const ExpensesPage = () => {
 
       <div className="px-4 space-y-2">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">All Expenses</h2>
-        {expenses.map((exp, i) => (
+        {filtered.map((exp, i) => (
           <div key={exp.id} className="glass shadow-soft rounded-xl p-4 flex items-center gap-3 animate-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
             <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-accent">
               {categoryIcons[exp.category]}
@@ -113,6 +183,9 @@ const ExpensesPage = () => {
             <span className="text-base font-bold text-destructive">-₵{exp.amount.toFixed(2)}</span>
           </div>
         ))}
+        {filtered.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-8">No expenses for this period</p>
+        )}
       </div>
     </div>
   );
