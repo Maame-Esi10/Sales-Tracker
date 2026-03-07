@@ -4,15 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ReceiptView from "@/components/ReceiptView";
 import OrderDetailView from "@/components/OrderDetailView";
-import { useMenuItems, useStaffNames, useSales } from "@/hooks/useStore";
-import { setSales, setStaffNames, type SaleDetail } from "@/data/store";
+import { useMenuItems, useStaff, useSales, type SaleWithItems } from "@/hooks/useSupabase";
 
-const parseDate = (dateStr: string): Date => {
-  const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? new Date() : d;
-};
-
-const filterByPeriod = (sales: SaleDetail[], period: string): SaleDetail[] => {
+const filterByPeriod = (sales: SaleWithItems[], period: string): SaleWithItems[] => {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfDay);
@@ -21,11 +15,27 @@ const filterByPeriod = (sales: SaleDetail[], period: string): SaleDetail[] => {
 
   return sales.filter((sale) => {
     if (period === "All Time") return true;
-    const d = parseDate(sale.date);
+    const d = new Date(sale.created_at);
     if (period === "Today") return d >= startOfDay;
     if (period === "Week") return d >= startOfWeek;
     if (period === "Month") return d >= startOfMonth;
     return true;
+  });
+};
+
+const formatTime = (dateStr: string) => {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - d.getTime()) / 60000);
+  if (diff < 1) return "Just now";
+  if (diff < 60) return `${diff} min ago`;
+  if (diff < 1440) return `${Math.floor(diff / 60)} hr ago`;
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+};
+
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleString("en-GB", {
+    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true,
   });
 };
 
@@ -38,21 +48,24 @@ const paymentIcon = (method: string) => {
 };
 
 const SalesPage = () => {
-  const menuItems = useMenuItems();
-  const staffNames = useStaffNames();
-  const sales = useSales();
+  const { items: menuItems } = useMenuItems();
+  const { staff, addStaff, removeStaff } = useStaff();
+  const { sales, addSale } = useSales();
 
   const [showNewSale, setShowNewSale] = useState(false);
   const [customerType, setCustomerType] = useState("Walk-in");
-  const [selectedWaiter, setSelectedWaiter] = useState(staffNames[0] || "");
+  const [selectedWaiter, setSelectedWaiter] = useState("");
   const [orderItems, setOrderItems] = useState<{ name: string; price: number; qty: number }[]>([]);
-  const [receiptSale, setReceiptSale] = useState<SaleDetail | null>(null);
-  const [detailSale, setDetailSale] = useState<SaleDetail | null>(null);
+  const [receiptSale, setReceiptSale] = useState<SaleWithItems | null>(null);
+  const [detailSale, setDetailSale] = useState<SaleWithItems | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "MoMo" | "Card">("Cash");
   const [period, setPeriod] = useState("Today");
 
   const [editingStaff, setEditingStaff] = useState(false);
   const [newStaffName, setNewStaffName] = useState("");
+
+  // Default waiter selection
+  const waiterName = selectedWaiter || (staff.length > 0 ? staff[0].name : "");
 
   const getItemQty = (name: string) => orderItems.find((i) => i.name === name)?.qty || 0;
 
@@ -66,44 +79,43 @@ const SalesPage = () => {
 
   const total = orderItems.reduce((sum, i) => sum + i.price * i.qty, 0);
 
-  const handleSaveSale = () => {
+  const handleSaveSale = async () => {
     if (orderItems.length === 0) return;
-    const newSale: SaleDetail = {
-      id: `ORD-${String(sales.length + 41).padStart(4, "0")}`,
-      items: [...orderItems],
+    const newSale = await addSale({
+      order_id: `ORD-${String(sales.length + 41).padStart(4, "0")}`,
       total,
       method: paymentMethod,
-      time: "Just now",
-      customerType,
-      waiter: selectedWaiter,
-      date: new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true }),
-    };
-    setSales([newSale, ...sales]);
-    setDetailSale(newSale);
+      customer_type: customerType,
+      waiter: waiterName,
+      items: [...orderItems],
+    });
+    if (newSale) {
+      setDetailSale(newSale);
+    }
     setShowNewSale(false);
     setOrderItems([]);
   };
 
-  const handleAddStaff = () => {
-    if (!newStaffName.trim() || staffNames.includes(newStaffName.trim())) return;
-    setStaffNames([...staffNames, newStaffName.trim()]);
+  const handleAddStaff = async () => {
+    if (!newStaffName.trim() || staff.some((s) => s.name === newStaffName.trim())) return;
+    await addStaff(newStaffName.trim());
     setNewStaffName("");
   };
 
-  const handleRemoveStaff = (name: string) => {
-    setStaffNames(staffNames.filter((n) => n !== name));
-    if (selectedWaiter === name) setSelectedWaiter(staffNames[0] || "");
+  const handleRemoveStaff = async (staffMember: typeof staff[0]) => {
+    await removeStaff(staffMember.id);
+    if (selectedWaiter === staffMember.name) setSelectedWaiter("");
   };
 
   if (receiptSale) {
     return (
       <ReceiptView
-        orderId={receiptSale.id}
+        orderId={receiptSale.order_id}
         items={receiptSale.items}
         total={receiptSale.total}
         method={receiptSale.method}
-        customerType={receiptSale.customerType}
-        date={receiptSale.date}
+        customerType={receiptSale.customer_type}
+        date={formatDate(receiptSale.created_at)}
         onClose={() => setReceiptSale(null)}
       />
     );
@@ -112,21 +124,20 @@ const SalesPage = () => {
   if (detailSale) {
     return (
       <OrderDetailView
-        orderId={detailSale.id}
+        orderId={detailSale.order_id}
         items={detailSale.items}
         total={detailSale.total}
         method={detailSale.method}
-        customerType={detailSale.customerType}
-        date={detailSale.date}
-        time={detailSale.time}
-        waiter={detailSale.waiter}
+        customerType={detailSale.customer_type}
+        date={formatDate(detailSale.created_at)}
+        time={formatTime(detailSale.created_at)}
+        waiter={detailSale.waiter || undefined}
         onClose={() => setDetailSale(null)}
         onViewReceipt={() => setReceiptSale(detailSale)}
       />
     );
   }
 
-  // New sale view
   if (showNewSale) {
     return (
       <div className="min-h-screen pb-44">
@@ -146,9 +157,9 @@ const SalesPage = () => {
             </button>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {staffNames.map((w) => (
-              <div key={w} className="relative">
-                <button onClick={() => setSelectedWaiter(w)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedWaiter === w ? "bg-accent text-accent-foreground shadow-sm" : "bg-secondary text-secondary-foreground"}`}>{w}</button>
+            {staff.map((w) => (
+              <div key={w.id} className="relative">
+                <button onClick={() => setSelectedWaiter(w.name)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${(selectedWaiter || staff[0]?.name) === w.name ? "bg-accent text-accent-foreground shadow-sm" : "bg-secondary text-secondary-foreground"}`}>{w.name}</button>
                 {editingStaff && (
                   <button onClick={() => handleRemoveStaff(w)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
                     <X size={10} />
@@ -161,13 +172,7 @@ const SalesPage = () => {
             {editingStaff && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                 <div className="flex gap-2 mt-2">
-                  <input
-                    value={newStaffName}
-                    onChange={(e) => setNewStaffName(e.target.value)}
-                    placeholder="New name..."
-                    className="flex-1 px-3 py-2 rounded-xl bg-secondary text-sm outline-none focus:ring-2 focus:ring-ring/30"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddStaff()}
-                  />
+                  <input value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)} placeholder="New name..." className="flex-1 px-3 py-2 rounded-xl bg-secondary text-sm outline-none focus:ring-2 focus:ring-ring/30" onKeyDown={(e) => e.key === "Enter" && handleAddStaff()} />
                   <button onClick={handleAddStaff} className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
                     <Plus size={14} />
                   </button>
@@ -197,18 +202,18 @@ const SalesPage = () => {
                 <motion.div key={item.id} layout className="glass shadow-soft rounded-xl p-3 flex items-center justify-between">
                   <div>
                     <div className="text-sm font-semibold">{item.name}</div>
-                    <div className="text-xs text-accent font-medium">₵{item.price.toFixed(2)}</div>
+                    <div className="text-xs text-accent font-medium">₵{Number(item.price).toFixed(2)}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     {qty > 0 && (
                       <>
-                        <button onClick={() => updateItem(item.name, item.price, -1)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                        <button onClick={() => updateItem(item.name, Number(item.price), -1)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
                           <Minus size={14} />
                         </button>
                         <span className="text-sm font-bold w-5 text-center">{qty}</span>
                       </>
                     )}
-                    <button onClick={() => updateItem(item.name, item.price, 1)} className="w-8 h-8 rounded-lg bg-accent text-accent-foreground flex items-center justify-center">
+                    <button onClick={() => updateItem(item.name, Number(item.price), 1)} className="w-8 h-8 rounded-lg bg-accent text-accent-foreground flex items-center justify-center">
                       <Plus size={14} />
                     </button>
                   </div>
@@ -269,7 +274,7 @@ const SalesPage = () => {
   }
 
   const filtered = filterByPeriod(sales, period);
-  const periodTotal = filtered.reduce((s, sale) => s + sale.total, 0);
+  const periodTotal = filtered.reduce((s, sale) => s + Number(sale.total), 0);
 
   return (
     <div className="min-h-screen pb-24">
@@ -282,14 +287,9 @@ const SalesPage = () => {
         }
       />
 
-      {/* Period filter */}
       <div className="px-4 mb-3 flex gap-2">
         {["Today", "Week", "Month", "All Time"].map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-          >
+          <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
             {p}
           </button>
         ))}
@@ -332,7 +332,7 @@ const SalesPage = () => {
             >
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold">{sale.id}</span>
+                  <span className="text-sm font-semibold">{sale.order_id}</span>
                   <span className="px-2 py-0.5 rounded-lg bg-secondary text-[10px] font-medium text-secondary-foreground flex items-center gap-1">
                     {paymentIcon(sale.method)} {sale.method}
                   </span>
@@ -340,11 +340,11 @@ const SalesPage = () => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{sale.items.length} items</span>
                   <span>·</span>
-                  <span className="flex items-center gap-0.5"><Clock size={10} />{sale.time}</span>
+                  <span className="flex items-center gap-0.5"><Clock size={10} />{formatTime(sale.created_at)}</span>
                   {sale.waiter && <><span>·</span><span>{sale.waiter}</span></>}
                 </div>
               </div>
-              <span className="text-base font-bold text-accent">₵{sale.total.toFixed(2)}</span>
+              <span className="text-base font-bold text-accent">₵{Number(sale.total).toFixed(2)}</span>
             </motion.button>
           ))}
           {filtered.length === 0 && (

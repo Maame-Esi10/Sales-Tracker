@@ -4,25 +4,15 @@ import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import MetricCard from "@/components/MetricCard";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
-import { useSales } from "@/hooks/useStore";
+import { useSales } from "@/hooks/useSupabase";
 
 const COLORS = ["hsl(270 55% 50%)", "hsl(38 75% 55%)", "hsl(145 50% 42%)", "hsl(0 65% 52%)", "hsl(200 60% 50%)"];
 
-const salesData = [
-  { day: "Mon", sales: 320 },
-  { day: "Tue", sales: 480 },
-  { day: "Wed", sales: 390 },
-  { day: "Thu", sales: 520 },
-  { day: "Fri", sales: 610 },
-  { day: "Sat", sales: 750 },
-  { day: "Sun", sales: 430 },
-];
-
 const AnalyticsPage = () => {
   const [period, setPeriod] = useState("Week");
-  const sales = useSales();
+  const { sales } = useSales();
 
-  const totalSales = sales.reduce((s, sale) => s + sale.total, 0);
+  const totalSales = sales.reduce((s, sale) => s + Number(sale.total), 0);
   const orderCount = sales.length;
 
   const itemCounts: Record<string, number> = {};
@@ -30,7 +20,7 @@ const AnalyticsPage = () => {
   sales.forEach((sale) => {
     sale.items.forEach((item) => {
       itemCounts[item.name] = (itemCounts[item.name] || 0) + item.qty;
-      itemRevenue[item.name] = (itemRevenue[item.name] || 0) + item.price * item.qty;
+      itemRevenue[item.name] = (itemRevenue[item.name] || 0) + Number(item.price) * item.qty;
     });
   });
   const topItems = Object.entries(itemCounts)
@@ -47,9 +37,20 @@ const AnalyticsPage = () => {
     if (s.waiter) {
       if (!waiterSales[s.waiter]) waiterSales[s.waiter] = { count: 0, total: 0 };
       waiterSales[s.waiter].count++;
-      waiterSales[s.waiter].total += s.total;
+      waiterSales[s.waiter].total += Number(s.total);
     }
   });
+
+  // Build sales trend from actual data
+  const salesByDay: Record<string, number> = {};
+  sales.forEach((s) => {
+    const day = new Date(s.created_at).toLocaleDateString("en-US", { weekday: "short" });
+    salesByDay[day] = (salesByDay[day] || 0) + Number(s.total);
+  });
+  const salesData = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => ({
+    day,
+    sales: salesByDay[day] || 0,
+  }));
 
   return (
     <div className="min-h-screen pb-24">
@@ -70,7 +71,6 @@ const AnalyticsPage = () => {
         <MetricCard label="Net Profit" value={`₵${totalSales.toFixed(0)}`} icon={<TrendingUp size={18} />} trend="+18%" trendUp />
       </div>
 
-      {/* Sales Trend */}
       <div className="px-4 mb-6">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Sales Trend</h2>
         <div className="glass shadow-soft rounded-xl p-4">
@@ -86,7 +86,6 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* Top Selling Items */}
       <div className="px-4 mb-6">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Top Selling Items</h2>
         <div className="glass shadow-soft rounded-xl p-4">
@@ -114,7 +113,6 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* Payment Breakdown */}
       <div className="px-4 mb-6">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Payment Methods</h2>
         <div className="glass shadow-soft rounded-xl p-4">
@@ -145,7 +143,6 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* Staff Sales Performance */}
       <div className="px-4 mb-6">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Staff Performance</h2>
         <div className="glass shadow-soft rounded-xl divide-y divide-border">

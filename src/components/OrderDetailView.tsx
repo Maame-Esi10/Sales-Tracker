@@ -1,5 +1,5 @@
 import { ArrowLeft, Clock, Printer, Share2, Check } from "lucide-react";
-import { SHOP_NAME } from "@/data/store";
+import { SHOP_NAME } from "@/hooks/useSupabase";
 import { motion } from "framer-motion";
 
 interface OrderItem {
@@ -64,9 +64,9 @@ const OrderDetailView = ({ orderId, items, total, method, customerType, date, ti
             <motion.div key={item.name} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.05 }} className="flex items-center justify-between p-4">
               <div>
                 <div className="text-sm font-semibold">{item.name}</div>
-                <div className="text-xs text-muted-foreground">₵{item.price.toFixed(2)} × {item.qty}</div>
+                <div className="text-xs text-muted-foreground">₵{Number(item.price).toFixed(2)} × {item.qty}</div>
               </div>
-              <span className="text-sm font-bold text-accent">₵{(item.price * item.qty).toFixed(2)}</span>
+              <span className="text-sm font-bold text-accent">₵{(Number(item.price) * item.qty).toFixed(2)}</span>
             </motion.div>
           ))}
         </div>
@@ -75,7 +75,7 @@ const OrderDetailView = ({ orderId, items, total, method, customerType, date, ti
       <div className="px-4 mb-6">
         <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="rounded-xl p-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))" }}>
           <span className="text-sm font-semibold uppercase tracking-wide text-primary-foreground">Total</span>
-          <span className="text-2xl font-bold text-primary-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>₵{total.toFixed(2)}</span>
+          <span className="text-2xl font-bold text-primary-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>₵{Number(total).toFixed(2)}</span>
         </motion.div>
       </div>
 

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Plus, X, Fuel, Zap, ShoppingCart, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, X, Fuel, Zap, ShoppingCart, Users } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import { useExpenses } from "@/hooks/useStore";
-import { setExpenses } from "@/data/store";
+import { useExpenses } from "@/hooks/useSupabase";
+import type { ExpenseRow } from "@/hooks/useSupabase";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   Gas: <Fuel size={16} />,
@@ -11,12 +11,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
   "Staff Wages": <Users size={16} />,
 };
 
-const parseDate = (dateStr: string): Date => {
-  const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? new Date() : d;
-};
-
-const filterByPeriod = <T,>(items: T[], getDate: (item: T) => string, period: string): T[] => {
+const filterByPeriod = (items: ExpenseRow[], period: string): ExpenseRow[] => {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfDay);
@@ -25,7 +20,7 @@ const filterByPeriod = <T,>(items: T[], getDate: (item: T) => string, period: st
 
   return items.filter((item) => {
     if (period === "All Time") return true;
-    const d = parseDate(getDate(item));
+    const d = new Date(item.created_at);
     if (period === "Today") return d >= startOfDay;
     if (period === "Week") return d >= startOfWeek;
     if (period === "Month") return d >= startOfMonth;
@@ -34,29 +29,29 @@ const filterByPeriod = <T,>(items: T[], getDate: (item: T) => string, period: st
 };
 
 const ExpensesPage = () => {
-  const expenses = useExpenses();
+  const { expenses, addExpense } = useExpenses();
   const [showAdd, setShowAdd] = useState(false);
   const [period, setPeriod] = useState("All Time");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [newExpense, setNewExpense] = useState({ category: "Ingredients", amount: "", note: "" });
 
-  const filtered = filterByPeriod(expenses, (e) => e.date, period);
-  const totalExpenses = filtered.reduce((s, e) => s + e.amount, 0);
+  const filtered = filterByPeriod(expenses, period);
+  const totalExpenses = filtered.reduce((s, e) => s + Number(e.amount), 0);
 
-  // Category tallies
   const categoryTotals = filtered.reduce<Record<string, number>>((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + e.amount;
+    acc[e.category] = (acc[e.category] || 0) + Number(e.amount);
     return acc;
   }, {});
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newExpense.amount) return;
-    setExpenses([
-      { id: Date.now(), category: newExpense.category, amount: Number(newExpense.amount), date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }), note: newExpense.note },
-      ...expenses,
-    ]);
+    await addExpense({ category: newExpense.category, amount: Number(newExpense.amount), note: newExpense.note });
     setNewExpense({ category: "Ingredients", amount: "", note: "" });
     setShowAdd(false);
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   };
 
   return (
@@ -70,14 +65,9 @@ const ExpensesPage = () => {
         }
       />
 
-      {/* Period filter */}
       <div className="px-4 mb-3 flex gap-2">
         {["Today", "Week", "Month", "All Time"].map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-          >
+          <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
             {p}
           </button>
         ))}
@@ -93,7 +83,6 @@ const ExpensesPage = () => {
         </div>
       </div>
 
-      {/* Category Breakdown with bar visualization */}
       <div className="px-4 mb-4">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Expense Breakdown</h2>
         <div className="glass shadow-soft rounded-xl p-4 space-y-3">
@@ -126,7 +115,6 @@ const ExpensesPage = () => {
         </div>
       </div>
 
-      {/* Selected Category Detail */}
       {selectedCategory && (
         <div className="px-4 mb-4 animate-slide-up">
           <div className="flex items-center justify-between mb-2">
@@ -141,9 +129,9 @@ const ExpensesPage = () => {
                 </div>
                 <div className="flex-1">
                   <div className="text-sm font-semibold">{exp.note || exp.category}</div>
-                  <div className="text-xs text-muted-foreground">{exp.date}</div>
+                  <div className="text-xs text-muted-foreground">{formatDate(exp.created_at)}</div>
                 </div>
-                <span className="text-sm font-bold text-destructive">-₵{exp.amount.toFixed(2)}</span>
+                <span className="text-sm font-bold text-destructive">-₵{Number(exp.amount).toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -178,9 +166,9 @@ const ExpensesPage = () => {
             </div>
             <div className="flex-1">
               <div className="text-sm font-semibold">{exp.category}</div>
-              <div className="text-xs text-muted-foreground">{exp.note} · {exp.date}</div>
+              <div className="text-xs text-muted-foreground">{exp.note} · {formatDate(exp.created_at)}</div>
             </div>
-            <span className="text-base font-bold text-destructive">-₵{exp.amount.toFixed(2)}</span>
+            <span className="text-base font-bold text-destructive">-₵{Number(exp.amount).toFixed(2)}</span>
           </div>
         ))}
         {filtered.length === 0 && (
