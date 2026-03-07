@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
-import { useMenuItems } from "@/hooks/useStore";
-import { setMenuItems, type MenuItem } from "@/data/store";
+import { useMenuItems } from "@/hooks/useSupabase";
 
 const categories = ["All", "Coffee", "Drinks", "Food", "Desserts"];
 
@@ -14,10 +13,10 @@ const categoryColor: Record<string, string> = {
 };
 
 const MenuPage = () => {
-  const items = useMenuItems();
+  const { items, addItem, updateItem, deleteItem } = useMenuItems();
   const [filter, setFilter] = useState("All");
   const [showAdd, setShowAdd] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", price: "", category: "Coffee", cost: "" });
 
   const filtered = filter === "All" ? items : items.filter((i) => i.category === filter);
@@ -28,34 +27,27 @@ const MenuPage = () => {
     setEditingId(null);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!formData.name || !formData.price) return;
-    setMenuItems([
-      ...items,
-      { id: Date.now(), name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 },
-    ]);
+    await addItem({ name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 });
     resetForm();
   };
 
-  const handleEdit = (item: MenuItem) => {
+  const handleEdit = (item: typeof items[0]) => {
     setEditingId(item.id);
     setFormData({ name: item.name, price: String(item.price), category: item.category, cost: String(item.cost) });
     setShowAdd(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!formData.name || !formData.price || !editingId) return;
-    setMenuItems(
-      items.map((i) =>
-        i.id === editingId
-          ? { ...i, name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 }
-          : i
-      )
-    );
+    await updateItem(editingId, { name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 });
     resetForm();
   };
 
-  const handleDelete = (id: number) => setMenuItems(items.filter((i) => i.id !== id));
+  const handleDelete = async (id: string) => {
+    await deleteItem(id);
+  };
 
   return (
     <div className="min-h-screen pb-24">
@@ -112,10 +104,10 @@ const MenuPage = () => {
                 <span className="text-sm font-semibold">{item.name}</span>
                 <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${categoryColor[item.category]}`}>{item.category}</span>
               </div>
-              <div className="text-xs text-muted-foreground">Ingredient cost: ₵{item.cost.toFixed(2)} · Profit: ₵{(item.price - item.cost).toFixed(2)}</div>
+              <div className="text-xs text-muted-foreground">Ingredient cost: ₵{Number(item.cost).toFixed(2)} · Profit: ₵{(Number(item.price) - Number(item.cost)).toFixed(2)}</div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-base font-bold text-accent">₵{item.price.toFixed(2)}</span>
+              <span className="text-base font-bold text-accent">₵{Number(item.price).toFixed(2)}</span>
               <button onClick={() => handleEdit(item)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors"><Pencil size={14} className="text-muted-foreground" /></button>
               <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"><Trash2 size={14} className="text-destructive" /></button>
             </div>

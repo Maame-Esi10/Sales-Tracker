@@ -1,5 +1,5 @@
 import { Printer, Share2, X } from "lucide-react";
-import { SHOP_NAME } from "@/data/store";
+import { SHOP_NAME } from "@/hooks/useSupabase";
 
 interface ReceiptItem {
   name: string;
@@ -27,9 +27,9 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
       `Date: ${date}`,
       `Customer: ${customerType}`,
       "",
-      ...items.map((i) => `${i.qty}x ${i.name} — ₵${(i.price * i.qty).toFixed(2)}`),
+      ...items.map((i) => `${i.qty}x ${i.name} — ₵${(Number(i.price) * i.qty).toFixed(2)}`),
       "",
-      `Total: ₵${total.toFixed(2)}`,
+      `Total: ₵${Number(total).toFixed(2)}`,
       `Paid via: ${method}`,
       "",
       "Thank you for your patronage! 🙏",
@@ -79,7 +79,7 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
             {items.map((item) => (
               <div key={item.name} className="flex justify-between text-base">
                 <span><span className="text-muted-foreground">{item.qty}×</span> <span className="font-medium">{item.name}</span></span>
-                <span className="font-semibold">₵{(item.price * item.qty).toFixed(2)}</span>
+                <span className="font-semibold">₵{(Number(item.price) * item.qty).toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -88,7 +88,7 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
 
           <div className="flex justify-between items-center mb-6">
             <span className="text-base font-semibold uppercase tracking-wide">Total</span>
-            <span className="text-3xl font-bold text-display">₵{total.toFixed(2)}</span>
+            <span className="text-3xl font-bold text-display">₵{Number(total).toFixed(2)}</span>
           </div>
 
           <div className="border-t border-dashed border-border mb-5" />
