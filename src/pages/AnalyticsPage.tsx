@@ -1,23 +1,41 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TrendingUp, ShoppingBag, Receipt, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import MetricCard from "@/components/MetricCard";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { useSales } from "@/hooks/useSupabase";
+import { startOfDay, startOfWeek, startOfMonth, isAfter, isEqual, format, subDays, eachDayOfInterval } from "date-fns";
 
 const COLORS = ["hsl(270 55% 50%)", "hsl(38 75% 55%)", "hsl(145 50% 42%)", "hsl(0 65% 52%)", "hsl(200 60% 50%)"];
 
 const AnalyticsPage = () => {
-  const [period, setPeriod] = useState("Week");
+  const [period, setPeriod] = useState("All Time");
   const { sales } = useSales();
 
-  const totalSales = sales.reduce((s, sale) => s + Number(sale.total), 0);
-  const orderCount = sales.length;
+  const filteredSales = useMemo(() => {
+    if (period === "All Time") return sales;
+    const now = new Date();
+    let cutoff: Date;
+    if (period === "Today") {
+      cutoff = startOfDay(now);
+    } else if (period === "Week") {
+      cutoff = startOfWeek(now, { weekStartsOn: 1 });
+    } else {
+      cutoff = startOfMonth(now);
+    }
+    return sales.filter((s) => {
+      const d = new Date(s.created_at);
+      return isAfter(d, cutoff) || isEqual(d, cutoff);
+    });
+  }, [sales, period]);
+
+  const totalSales = filteredSales.reduce((s, sale) => s + Number(sale.total), 0);
+  const orderCount = filteredSales.length;
 
   const itemCounts: Record<string, number> = {};
   const itemRevenue: Record<string, number> = {};
-  sales.forEach((sale) => {
+  filteredSales.forEach((sale) => {
     sale.items.forEach((item) => {
       itemCounts[item.name] = (itemCounts[item.name] || 0) + item.qty;
       itemRevenue[item.name] = (itemRevenue[item.name] || 0) + Number(item.price) * item.qty;
@@ -29,11 +47,11 @@ const AnalyticsPage = () => {
     .slice(0, 5);
 
   const methodCounts: Record<string, number> = {};
-  sales.forEach((s) => { methodCounts[s.method] = (methodCounts[s.method] || 0) + 1; });
+  filteredSales.forEach((s) => { methodCounts[s.method] = (methodCounts[s.method] || 0) + 1; });
   const paymentData = Object.entries(methodCounts).map(([name, value]) => ({ name, value }));
 
   const waiterSales: Record<string, { count: number; total: number }> = {};
-  sales.forEach((s) => {
+  filteredSales.forEach((s) => {
     if (s.waiter) {
       if (!waiterSales[s.waiter]) waiterSales[s.waiter] = { count: 0, total: 0 };
       waiterSales[s.waiter].count++;
@@ -41,16 +59,32 @@ const AnalyticsPage = () => {
     }
   });
 
-  // Build sales trend from actual data
-  const salesByDay: Record<string, number> = {};
-  sales.forEach((s) => {
-    const day = new Date(s.created_at).toLocaleDateString("en-US", { weekday: "short" });
-    salesByDay[day] = (salesByDay[day] || 0) + Number(s.total);
-  });
-  const salesData = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => ({
-    day,
-    sales: salesByDay[day] || 0,
-  }));
+  // Build sales trend from filtered data
+  const salesData = useMemo(() => {
+    const now = new Date();
+    let days: Date[];
+    if (period === "Today") {
+      days = [startOfDay(now)];
+    } else if (period === "Week") {
+      const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+      days = eachDayOfInterval({ start: weekStart, end: now });
+    } else if (period === "Month") {
+      const monthStart = startOfMonth(now);
+      days = eachDayOfInterval({ start: monthStart, end: now });
+    } else {
+      // All Time: show last 7 days
+      days = eachDayOfInterval({ start: subDays(now, 6), end: now });
+    }
+
+    return days.map((day) => {
+      const dayStr = format(day, "EEE");
+      const dayDate = format(day, "yyyy-MM-dd");
+      const total = filteredSales
+        .filter((s) => format(new Date(s.created_at), "yyyy-MM-dd") === dayDate)
+        .reduce((sum, s) => sum + Number(s.total), 0);
+      return { day: dayStr, sales: total };
+    });
+  }, [filteredSales, period]);
 
   return (
     <div className="min-h-screen pb-24">
@@ -65,10 +99,10 @@ const AnalyticsPage = () => {
       </div>
 
       <div className="px-4 grid grid-cols-2 gap-2 mb-6">
-        <MetricCard label="Total Sales" value={`₵${totalSales.toFixed(0)}`} icon={<DollarSign size={18} />} trend="+12.5%" trendUp gradient />
-        <MetricCard label="Orders" value={String(orderCount)} icon={<ShoppingBag size={18} />} trend="+8%" trendUp />
+        <MetricCard label="Total Sales" value={`₵${totalSales.toFixed(0)}`} icon={<DollarSign size={18} />} gradient />
+        <MetricCard label="Orders" value={String(orderCount)} icon={<ShoppingBag size={18} />} />
         <MetricCard label="Avg Order" value={`₵${orderCount > 0 ? (totalSales / orderCount).toFixed(0) : "0"}`} icon={<Receipt size={18} />} />
-        <MetricCard label="Net Profit" value={`₵${totalSales.toFixed(0)}`} icon={<TrendingUp size={18} />} trend="+18%" trendUp />
+        <MetricCard label="Top Method" value={paymentData.length > 0 ? paymentData.sort((a, b) => b.value - a.value)[0].name : "—"} icon={<TrendingUp size={18} />} />
       </div>
 
       <div className="px-4 mb-6">
