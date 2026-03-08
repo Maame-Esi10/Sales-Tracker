@@ -72,6 +72,35 @@ const ExpensesPage = () => {
         }
       />
 
+      {showAdd && (
+        <div className="px-4 mb-4 animate-slide-up">
+          <div className="glass shadow-card rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold">New Expense</span>
+              <button onClick={() => setShowAdd(false)}><X size={18} className="text-muted-foreground" /></button>
+            </div>
+            <div className="space-y-2">
+              <select value={newExpense.category} onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none">
+                {Object.keys(categoryIcons).map((c) => <option key={c}>{c}</option>)}
+              </select>
+              <input placeholder="Item name (e.g. Rice)" value={newExpense.item} onChange={(e) => setNewExpense({ ...newExpense, item: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
+              <div className="flex gap-2">
+                <input placeholder="Qty (e.g. 1kg)" value={newExpense.qty} onChange={(e) => setNewExpense({ ...newExpense, qty: e.target.value })} className="flex-1 px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
+                <input placeholder="Unit Price (₵)" type="number" value={newExpense.unitPrice} onChange={(e) => setNewExpense({ ...newExpense, unitPrice: e.target.value })} className="flex-1 px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
+              </div>
+              <input placeholder="Note (optional)" value={newExpense.note} onChange={(e) => setNewExpense({ ...newExpense, note: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
+              {calculatedTotal > 0 && (
+                <div className="flex justify-between items-center px-1 py-2 text-sm">
+                  <span className="text-muted-foreground">Total Amount:</span>
+                  <span className="font-bold text-destructive">₵{calculatedTotal.toFixed(2)}</span>
+                </div>
+              )}
+              <button onClick={handleAdd} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save Expense</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="px-4 mb-3 flex gap-2">
         {["Today", "Week", "Month", "All Time"].map((p) => (
           <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
