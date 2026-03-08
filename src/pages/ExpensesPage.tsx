@@ -329,6 +329,38 @@ const ExpensesPage = () => {
           <p className="text-sm text-muted-foreground text-center py-8">No expenses for this period</p>
         )}
       </div>
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="glass shadow-card rounded-2xl p-6 max-w-sm w-full animate-scale-in">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="text-destructive" size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold">Delete Expense?</h3>
+                <p className="text-xs text-muted-foreground">This action cannot be undone.</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 py-2.5 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => { await deleteExpense(deleteConfirm); setDeleteConfirm(null); }}
+                className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 };
