@@ -9,14 +9,15 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [displayName, setDisplayName] = useState<string>("");
 
-  const fetchRole = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .single();
-    if (data) setRole(data.role as AppRole);
+  const fetchUserData = useCallback(async (userId: string) => {
+    const [{ data: roleData }, { data: profileData }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId).single(),
+      supabase.from("profiles").select("display_name").eq("id", userId).single(),
+    ]);
+    if (roleData) setRole(roleData.role as AppRole);
+    if (profileData) setDisplayName(profileData.display_name);
   }, []);
 
   useEffect(() => {
@@ -26,10 +27,10 @@ export function useAuth() {
         setUser(session?.user ?? null);
         setLoading(false);
         if (session?.user) {
-          // Defer to avoid Supabase deadlock
-          setTimeout(() => fetchRole(session.user.id), 0);
+          setTimeout(() => fetchUserData(session.user.id), 0);
         } else {
           setRole(null);
+          setDisplayName("");
         }
       }
     );
@@ -38,11 +39,11 @@ export function useAuth() {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      if (session?.user) fetchRole(session.user.id);
+      if (session?.user) fetchUserData(session.user.id);
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchRole]);
+  }, [fetchUserData]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -64,6 +65,7 @@ export function useAuth() {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRole(null);
+    setDisplayName("");
   };
 
   const resetPassword = async (email: string) => {
@@ -75,5 +77,5 @@ export function useAuth() {
 
   const isAdmin = role === "admin";
 
-  return { user, session, loading, role, isAdmin, signIn, signUp, signOut, resetPassword };
+  return { user, session, loading, role, isAdmin, displayName, signIn, signUp, signOut, resetPassword };
 }
