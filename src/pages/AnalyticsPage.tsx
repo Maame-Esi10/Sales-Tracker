@@ -195,7 +195,7 @@ const AnalyticsPage = () => {
             <motion.div key={name} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex flex-col">
               <button onClick={() => setExpandedWaiter(expandedWaiter === name ? null : name)} className="flex items-center justify-between p-3 w-full text-left hover:bg-secondary/50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground" style={{ background: `linear-gradient(135deg, ${COLORS[i % COLORS.length]}, ${COLORS[(i + 1) % COLORS.length]})` }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: COLORS[i % COLORS.length] }}>
                     {name[0]}
                   </div>
                   <div>
