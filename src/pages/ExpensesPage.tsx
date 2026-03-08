@@ -360,7 +360,6 @@ const ExpensesPage = () => {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 };
