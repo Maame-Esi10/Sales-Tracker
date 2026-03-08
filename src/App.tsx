@@ -20,7 +20,8 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, role, loading } = useAuth();
+  if (loading || role === null) return null; // Wait for role to load
   if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
