@@ -69,7 +69,8 @@ const SalesPage = () => {
   const [receiptSale, setReceiptSale] = useState<SaleWithItems | null>(null);
   const [detailSale, setDetailSale] = useState<SaleWithItems | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "MoMo" | "Card">("Cash");
-  const [period, setPeriod] = useState("Today");
+  const [period, setPeriod] = useState<string>("Today");
+  const [customDate, setCustomDate] = useState<Date | undefined>();
 
   const getItemQty = (name: string) => orderItems.find((i) => i.name === name)?.qty || 0;
 
