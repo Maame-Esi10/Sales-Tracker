@@ -18,7 +18,7 @@ interface ReceiptViewProps {
   onClose: () => void;
 }
 
-const ReceiptView = ({ orderId, items, total, method, customerType, date, onClose }: ReceiptViewProps) => {
+const ReceiptView = ({ orderId, items, total, method, customerType, waiter, date, onClose }: ReceiptViewProps) => {
   const handlePrint = () => window.print();
 
   const handleShare = async () => {
