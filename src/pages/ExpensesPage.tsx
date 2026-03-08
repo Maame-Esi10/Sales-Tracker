@@ -97,22 +97,6 @@ const ExpensesPage = () => {
   };
 
   const grandTotal = lineItems.reduce((sum, li) => sum + (Number(li.unitPrice) || 0), 0);
-
-  const handleAdd = async () => {
-    const validItems = lineItems.filter(li => li.unitPrice && Number(li.unitPrice) > 0);
-    if (validItems.length === 0) return;
-
-    const itemsDescription = validItems
-      .map(li => `${li.item || "Item"} (${li.qty || 1} × ₵${li.unitPrice})`)
-      .join(", ");
-    const finalNote = note ? `${itemsDescription} | ${note}` : itemsDescription;
-
-    await addExpense({ category, amount: grandTotal, note: finalNote });
-    setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
-    setNote("");
-    setShowAdd(false);
-  };
-
   const resetForm = () => {
     setShowAdd(false);
     setEditingExpense(null);
