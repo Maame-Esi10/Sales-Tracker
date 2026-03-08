@@ -276,12 +276,8 @@ const SalesPage = () => {
         }
       />
 
-      <div className="px-4 mb-3 flex gap-2">
-        {["Today", "Week", "Month", "All Time"].map((p) => (
-          <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
-            {p}
-          </button>
-        ))}
+      <div className="px-4 mb-3">
+        <PeriodFilter period={period} onPeriodChange={setPeriod} customDate={customDate} onCustomDateChange={setCustomDate} />
       </div>
 
       <div className="px-4 mb-3">
