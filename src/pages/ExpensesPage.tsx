@@ -314,6 +314,12 @@ const ExpensesPage = () => {
                       Note: {exp.note.split(" | ").slice(1).join(" | ")}
                     </div>
                   )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(exp.id); }}
+                    className="mt-3 flex items-center gap-1.5 text-xs text-destructive font-medium hover:underline"
+                  >
+                    <Trash2 size={12} /> Delete Expense
+                  </button>
                 </div>
               )}
             </button>
