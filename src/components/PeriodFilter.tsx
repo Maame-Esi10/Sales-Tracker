@@ -19,7 +19,7 @@ const PeriodFilter = ({ period, onPeriodChange, customDate, onCustomDateChange }
 
   return (
     <div className="flex gap-2 items-center flex-wrap">
-      {(["Today", "Week", "Month", "All Time"] as const).map((p) => (
+      {(["Today", "Week", "Month"] as const).map((p) => (
         <button
           key={p}
           onClick={() => onPeriodChange(p)}

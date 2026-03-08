@@ -64,7 +64,7 @@ const parseNoteItems = (note: string | null): { name: string; detail: string }[]
 const ExpensesPage = () => {
   const { expenses, addExpense } = useExpenses();
   const [showAdd, setShowAdd] = useState(false);
-  const [period, setPeriod] = useState<string>("All Time");
+  const [period, setPeriod] = useState<string>("Today");
   const [customDate, setCustomDate] = useState<Date | undefined>();
   const [expandedExpense, setExpandedExpense] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
