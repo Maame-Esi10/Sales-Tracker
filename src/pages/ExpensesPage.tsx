@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Fuel, Zap, ShoppingCart, Users, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, X, Fuel, Zap, ShoppingCart, Users, Trash2, AlertTriangle, Pencil } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useExpenses } from "@/hooks/useSupabase";
 import type { ExpenseRow } from "@/hooks/useSupabase";
@@ -62,9 +62,10 @@ const parseNoteItems = (note: string | null): { name: string; detail: string }[]
 };
 
 const ExpensesPage = () => {
-  const { expenses, addExpense, deleteExpense } = useExpenses();
+  const { expenses, addExpense, deleteExpense, updateExpense } = useExpenses();
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<ExpenseRow | null>(null);
   const [period, setPeriod] = useState<string>("Today");
   const [customDate, setCustomDate] = useState<Date | undefined>();
   const [expandedExpense, setExpandedExpense] = useState<string | null>(null);
@@ -96,8 +97,39 @@ const ExpensesPage = () => {
   };
 
   const grandTotal = lineItems.reduce((sum, li) => sum + (Number(li.unitPrice) || 0), 0);
+  const resetForm = () => {
+    setShowAdd(false);
+    setEditingExpense(null);
+    setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+    setNote("");
+    setCategory("Ingredients");
+  };
 
-  const handleAdd = async () => {
+  const startEdit = (exp: ExpenseRow) => {
+    // Parse existing note back into line items
+    const parsed = parseNoteItems(exp.note);
+    const items: ExpenseLineItem[] = parsed.map((p) => {
+      // Try to extract qty and price from detail like "(2kg × ₵24)"
+      const match = p.detail.match(/\(([^×]+)×\s*₵?(\d+\.?\d*)\)/);
+      return {
+        id: crypto.randomUUID(),
+        item: p.name,
+        qty: match ? match[1].trim() : "",
+        unitPrice: match ? match[2] : "",
+      };
+    });
+    if (items.length === 0) items.push({ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" });
+    
+    setEditingExpense(exp);
+    setCategory(exp.category);
+    setLineItems(items);
+    const noteParts = exp.note?.split(" | ");
+    setNote(noteParts && noteParts.length > 1 ? noteParts.slice(1).join(" | ") : "");
+    setShowAdd(true);
+    setExpandedExpense(null);
+  };
+
+  const handleSave = async () => {
     const validItems = lineItems.filter(li => li.unitPrice && Number(li.unitPrice) > 0);
     if (validItems.length === 0) return;
 
@@ -106,16 +138,12 @@ const ExpensesPage = () => {
       .join(", ");
     const finalNote = note ? `${itemsDescription} | ${note}` : itemsDescription;
 
-    await addExpense({ category, amount: grandTotal, note: finalNote });
-    setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
-    setNote("");
-    setShowAdd(false);
-  };
-
-  const resetForm = () => {
-    setShowAdd(false);
-    setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
-    setNote("");
+    if (editingExpense) {
+      await updateExpense(editingExpense.id, { category, amount: grandTotal, note: finalNote });
+    } else {
+      await addExpense({ category, amount: grandTotal, note: finalNote });
+    }
+    resetForm();
   };
 
   const formatDate = (dateStr: string) => {
@@ -137,7 +165,7 @@ const ExpensesPage = () => {
         <div className="px-4 mb-4 animate-slide-up">
           <div className="glass shadow-card rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold">New Expense</span>
+              <span className="text-sm font-semibold">{editingExpense ? "Edit Expense" : "New Expense"}</span>
               <button onClick={resetForm}><X size={18} className="text-muted-foreground" /></button>
             </div>
             <div className="space-y-3">
@@ -203,7 +231,7 @@ const ExpensesPage = () => {
                   <span className="font-bold text-destructive text-lg">₵{grandTotal.toFixed(2)}</span>
                 </div>
               )}
-              <button onClick={handleAdd} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save Expense</button>
+              <button onClick={handleSave} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">{editingExpense ? "Update Expense" : "Save Expense"}</button>
             </div>
           </div>
         </div>
@@ -314,12 +342,20 @@ const ExpensesPage = () => {
                       Note: {exp.note.split(" | ").slice(1).join(" | ")}
                     </div>
                   )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(exp.id); }}
-                    className="mt-3 flex items-center gap-1.5 text-xs text-destructive font-medium hover:underline"
-                  >
-                    <Trash2 size={12} /> Delete Expense
-                  </button>
+                  <div className="mt-3 flex items-center gap-4">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); startEdit(exp); }}
+                      className="flex items-center gap-1.5 text-xs text-accent font-medium hover:underline"
+                    >
+                      <Pencil size={12} /> Edit
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm(exp.id); }}
+                      className="flex items-center gap-1.5 text-xs text-destructive font-medium hover:underline"
+                    >
+                      <Trash2 size={12} /> Delete
+                    </button>
+                  </div>
                 </div>
               )}
             </button>

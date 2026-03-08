@@ -205,7 +205,13 @@ export function useExpenses() {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
 
-  return { expenses, loading, addExpense, deleteExpense, refetch: fetch };
+  const updateExpense = async (id: string, updates: { category?: string; amount?: number; note?: string }) => {
+    const { data } = await supabase.from("expenses").update(updates).eq("id", id).select().single();
+    if (data) setExpenses((prev) => prev.map((e) => (e.id === id ? data : e)));
+    return data;
+  };
+
+  return { expenses, loading, addExpense, deleteExpense, updateExpense, refetch: fetch };
 }
 
 export const SHOP_NAME = "Purple Rain Coffee";
