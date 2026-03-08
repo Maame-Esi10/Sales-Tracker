@@ -5,7 +5,8 @@ import PageHeader from "@/components/PageHeader";
 import MetricCard from "@/components/MetricCard";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { useSales } from "@/hooks/useSupabase";
-import { startOfDay, startOfWeek, startOfMonth, isAfter, isEqual, format, subDays, eachDayOfInterval } from "date-fns";
+import { startOfDay, startOfWeek, startOfMonth, endOfDay, isAfter, isEqual, isBefore, format, subDays, eachDayOfInterval } from "date-fns";
+import PeriodFilter from "@/components/PeriodFilter";
 
 const COLORS = ["hsl(270 55% 50%)", "hsl(38 75% 55%)", "hsl(145 50% 42%)", "hsl(0 65% 52%)", "hsl(200 60% 50%)"];
 
