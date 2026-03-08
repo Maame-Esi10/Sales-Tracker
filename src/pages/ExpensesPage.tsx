@@ -3,6 +3,7 @@ import { Plus, X, Fuel, Zap, ShoppingCart, Users } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useExpenses } from "@/hooks/useSupabase";
 import type { ExpenseRow } from "@/hooks/useSupabase";
+import { startOfDay, startOfWeek as dateFnsStartOfWeek, startOfMonth, isAfter, isEqual } from "date-fns";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   Gas: <Fuel size={16} />,
@@ -12,19 +13,19 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 const filterByPeriod = (items: ExpenseRow[], period: string): ExpenseRow[] => {
+  if (period === "All Time") return items;
   const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(startOfDay);
-  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
+  let cutoff: Date;
+  if (period === "Today") {
+    cutoff = startOfDay(now);
+  } else if (period === "Week") {
+    cutoff = dateFnsStartOfWeek(now, { weekStartsOn: 1 });
+  } else {
+    cutoff = startOfMonth(now);
+  }
   return items.filter((item) => {
-    if (period === "All Time") return true;
     const d = new Date(item.created_at);
-    if (period === "Today") return d >= startOfDay;
-    if (period === "Week") return d >= startOfWeek;
-    if (period === "Month") return d >= startOfMonth;
-    return true;
+    return isAfter(d, cutoff) || isEqual(d, cutoff);
   });
 };
 
