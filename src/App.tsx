@@ -3,39 +3,59 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import SplashScreen from "@/components/SplashScreen";
+import { useAuth } from "@/hooks/useAuth";
 import SalesPage from "@/pages/SalesPage";
 import KitchenPage from "@/pages/KitchenPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import MenuPage from "@/pages/MenuPage";
 import ExpensesPage from "@/pages/ExpensesPage";
+import LoginPage from "@/pages/LoginPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const ProtectedRoutes = () => {
+  const { user, loading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
+  if (loading) return null;
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  return (
+    <>
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      <div className="max-w-lg mx-auto min-h-screen bg-background">
+        <Routes>
+          <Route path="/" element={<SalesPage />} />
+          <Route path="/kitchen" element={<KitchenPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/menu" element={<MenuPage />} />
+          <Route path="/expenses" element={<ExpensesPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <BottomNav />
+      </div>
+    </>
+  );
+};
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
         <BrowserRouter>
-          <div className="max-w-lg mx-auto min-h-screen bg-background">
-            <Routes>
-              <Route path="/" element={<SalesPage />} />
-              <Route path="/kitchen" element={<KitchenPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/menu" element={<MenuPage />} />
-              <Route path="/expenses" element={<ExpensesPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <BottomNav />
-          </div>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/*" element={<ProtectedRoutes />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

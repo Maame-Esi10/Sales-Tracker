@@ -192,35 +192,55 @@ const SalesPage = () => {
           </div>
         </div>
 
-        {/* Menu items */}
+        {/* Menu items - grouped by category */}
         <div className="px-4 mb-4">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Add Items</label>
-          <div className="space-y-2">
-            {menuItems.map((item) => {
-              const qty = getItemQty(item.name);
-              return (
-                <motion.div key={item.id} layout className="glass shadow-soft rounded-xl p-3 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold">{item.name}</div>
-                    <div className="text-xs text-accent font-medium">₵{Number(item.price).toFixed(2)}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {qty > 0 && (
-                      <>
-                        <button onClick={() => updateItem(item.name, Number(item.price), -1)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
-                          <Minus size={14} />
-                        </button>
-                        <span className="text-sm font-bold w-5 text-center">{qty}</span>
-                      </>
-                    )}
-                    <button onClick={() => updateItem(item.name, Number(item.price), 1)} className="w-8 h-8 rounded-lg bg-accent text-accent-foreground flex items-center justify-center">
-                      <Plus size={14} />
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+          {Object.entries(
+            menuItems.reduce((acc, item) => {
+              const cat = item.category || "Other";
+              if (!acc[cat]) acc[cat] = [];
+              acc[cat].push(item);
+              return acc;
+            }, {} as Record<string, typeof menuItems>)
+          ).map(([category, items]) => (
+            <div key={category} className="mb-3">
+              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{category}</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {items.map((item) => {
+                  const qty = getItemQty(item.name);
+                  return (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      className={`glass shadow-soft rounded-xl p-3 flex flex-col justify-between transition-all ${qty > 0 ? "ring-1 ring-accent/40" : ""}`}
+                    >
+                      <div className="mb-2">
+                        <div className="text-sm font-semibold leading-tight">{item.name}</div>
+                        <div className="text-xs text-accent font-medium mt-0.5">₵{Number(item.price).toFixed(2)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        {qty > 0 ? (
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={() => updateItem(item.name, Number(item.price), -1)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
+                              <Minus size={12} />
+                            </button>
+                            <span className="text-sm font-bold w-5 text-center">{qty}</span>
+                            <button onClick={() => updateItem(item.name, Number(item.price), 1)} className="w-7 h-7 rounded-lg bg-accent text-accent-foreground flex items-center justify-center">
+                              <Plus size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => updateItem(item.name, Number(item.price), 1)} className="w-full py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-center gap-1">
+                            <Plus size={12} /> Add
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Order summary */}
