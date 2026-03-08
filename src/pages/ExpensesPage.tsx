@@ -67,8 +67,7 @@ const ExpensesPage = () => {
     }
   };
 
-  const getLineTotal = (li: ExpenseLineItem) => (Number(li.qty) || 1) * (Number(li.unitPrice) || 0);
-  const grandTotal = lineItems.reduce((sum, li) => sum + getLineTotal(li), 0);
+  const grandTotal = lineItems.reduce((sum, li) => sum + (Number(li.unitPrice) || 0), 0);
 
   const handleAdd = async () => {
     const validItems = lineItems.filter(li => li.unitPrice && Number(li.unitPrice) > 0);
@@ -149,8 +148,8 @@ const ExpensesPage = () => {
                         onChange={(e) => updateLineItem(li.id, "unitPrice", e.target.value)} 
                         className="flex-1 px-3 py-2 rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-accent/30" 
                       />
-                      {getLineTotal(li) > 0 && (
-                        <span className="text-xs font-semibold text-foreground whitespace-nowrap">= ₵{getLineTotal(li).toFixed(2)}</span>
+                      {Number(li.unitPrice) > 0 && (
+                        <span className="text-xs font-semibold text-foreground whitespace-nowrap">₵{Number(li.unitPrice).toFixed(2)}</span>
                       )}
                     </div>
                   </div>
