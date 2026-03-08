@@ -39,11 +39,11 @@ export function useAuth() {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      if (session?.user) fetchRole(session.user.id);
+      if (session?.user) fetchUserData(session.user.id);
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchRole]);
+  }, [fetchUserData]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
