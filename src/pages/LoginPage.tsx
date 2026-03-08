@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Coffee, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Coffee, ArrowLeft, Shield, User } from "lucide-react";
 import logo from "@/assets/logo.png";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { SHOP_NAME } from "@/hooks/useSupabase";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [selectedRole, setSelectedRole] = useState<AppRole>("staff");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +33,7 @@ const LoginPage = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(email, password, displayName);
+    const { error } = await signUp(email, password, displayName, selectedRole);
     if (error) {
       toast.error(error.message);
     } else {
@@ -53,6 +54,12 @@ const LoginPage = () => {
       setView("login");
     }
     setLoading(false);
+  };
+
+  const inputStyle = {
+    background: "hsl(270 30% 16%)",
+    color: "hsl(270 20% 85%)",
+    border: "1px solid hsl(270 30% 22%)",
   };
 
   return (
@@ -112,12 +119,38 @@ const LoginPage = () => {
           </p>
         </div>
 
+        {/* Role Toggle - show on login and signup */}
+        {view !== "forgot" && (
+          <div className="flex rounded-xl overflow-hidden mb-5" style={{ border: "1px solid hsl(270 30% 22%)" }}>
+            <button
+              onClick={() => setSelectedRole("staff")}
+              className="flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all"
+              style={{
+                background: selectedRole === "staff" ? "hsl(270 50% 30%)" : "hsl(270 30% 14%)",
+                color: selectedRole === "staff" ? "hsl(270 70% 85%)" : "hsl(270 20% 45%)",
+              }}
+            >
+              <User size={15} /> Staff
+            </button>
+            <button
+              onClick={() => setSelectedRole("admin")}
+              className="flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all"
+              style={{
+                background: selectedRole === "admin" ? "hsl(38 60% 30%)" : "hsl(270 30% 14%)",
+                color: selectedRole === "admin" ? "hsl(38 80% 75%)" : "hsl(270 20% 45%)",
+              }}
+            >
+              <Shield size={15} /> Owner
+            </button>
+          </div>
+        )}
+
         {/* Form */}
         <form
           onSubmit={view === "login" ? handleLogin : view === "signup" ? handleSignup : handleForgot}
           className="space-y-3"
         >
-          {view !== "login" && view !== "forgot" && (
+          {view === "signup" && (
             <input
               type="text"
               placeholder="Display Name"
@@ -125,11 +158,7 @@ const LoginPage = () => {
               onChange={(e) => setDisplayName(e.target.value)}
               required
               className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all focus:ring-2 focus:ring-accent/40"
-              style={{
-                background: "hsl(270 30% 16%)",
-                color: "hsl(270 20% 85%)",
-                border: "1px solid hsl(270 30% 22%)",
-              }}
+              style={inputStyle}
             />
           )}
 
@@ -140,11 +169,7 @@ const LoginPage = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all focus:ring-2 focus:ring-accent/40"
-            style={{
-              background: "hsl(270 30% 16%)",
-              color: "hsl(270 20% 85%)",
-              border: "1px solid hsl(270 30% 22%)",
-            }}
+            style={inputStyle}
           />
 
           {view !== "forgot" && (
@@ -157,11 +182,7 @@ const LoginPage = () => {
                 required
                 minLength={6}
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all focus:ring-2 focus:ring-accent/40 pr-11"
-                style={{
-                  background: "hsl(270 30% 16%)",
-                  color: "hsl(270 20% 85%)",
-                  border: "1px solid hsl(270 30% 22%)",
-                }}
+                style={inputStyle}
               />
               <button
                 type="button"
@@ -184,9 +205,7 @@ const LoginPage = () => {
                 <Coffee size={16} />
               </motion.div>
             ) : (
-              <>
-                {view === "login" ? "Sign In" : view === "signup" ? "Create Account" : "Send Reset Link"}
-              </>
+              view === "login" ? "Sign In" : view === "signup" ? "Create Account" : "Send Reset Link"
             )}
           </button>
         </form>
@@ -195,11 +214,7 @@ const LoginPage = () => {
         <div className="mt-5 text-center space-y-2">
           {view === "login" && (
             <>
-              <button
-                onClick={() => setView("forgot")}
-                className="text-xs block w-full"
-                style={{ color: "hsl(270 40% 55%)" }}
-              >
+              <button onClick={() => setView("forgot")} className="text-xs block w-full" style={{ color: "hsl(270 40% 55%)" }}>
                 Forgot password?
               </button>
               <p className="text-xs" style={{ color: "hsl(270 20% 40%)" }}>
@@ -211,11 +226,7 @@ const LoginPage = () => {
             </>
           )}
           {(view === "signup" || view === "forgot") && (
-            <button
-              onClick={() => setView("login")}
-              className="text-xs flex items-center justify-center gap-1 w-full"
-              style={{ color: "hsl(270 40% 55%)" }}
-            >
+            <button onClick={() => setView("login")} className="text-xs flex items-center justify-center gap-1 w-full" style={{ color: "hsl(270 40% 55%)" }}>
               <ArrowLeft size={12} /> Back to login
             </button>
           )}
