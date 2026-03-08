@@ -36,10 +36,27 @@ interface ExpenseLineItem {
   unitPrice: string;
 }
 
+const parseNoteItems = (note: string | null): { name: string; detail: string }[] => {
+  if (!note) return [];
+  // Try to parse "Item (qty × ₵price), Item2 (qty × ₵price) | optional note"
+  const mainPart = note.split(" | ")[0];
+  const matches = mainPart.match(/([^,]+?\s*\([^)]+\))/g);
+  if (!matches) return [{ name: note, detail: "" }];
+  return matches.map((m) => {
+    const trimmed = m.trim();
+    const parenIdx = trimmed.indexOf("(");
+    if (parenIdx > 0) {
+      return { name: trimmed.slice(0, parenIdx).trim(), detail: trimmed.slice(parenIdx) };
+    }
+    return { name: trimmed, detail: "" };
+  });
+};
+
 const ExpensesPage = () => {
   const { expenses, addExpense } = useExpenses();
   const [showAdd, setShowAdd] = useState(false);
   const [period, setPeriod] = useState("All Time");
+  const [expandedExpense, setExpandedExpense] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [category, setCategory] = useState("Ingredients");
   const [lineItems, setLineItems] = useState<ExpenseLineItem[]>([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
