@@ -8,7 +8,16 @@ import { useMenuItems, useSales, type SaleWithItems } from "@/hooks/useSupabase"
 import { useAuth } from "@/hooks/useAuth";
 import PeriodFilter from "@/components/PeriodFilter";
 
-const filterByPeriod = (sales: SaleWithItems[], period: string): SaleWithItems[] => {
+const filterByPeriod = (sales: SaleWithItems[], period: string, customDate?: Date): SaleWithItems[] => {
+  if (period === "Custom" && customDate) {
+    const dayStart = new Date(customDate.getFullYear(), customDate.getMonth(), customDate.getDate());
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+    return sales.filter((sale) => {
+      const d = new Date(sale.created_at);
+      return d >= dayStart && d < dayEnd;
+    });
+  }
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfDay);
