@@ -71,7 +71,7 @@ const ExpensesPage = () => {
   const [lineItems, setLineItems] = useState<ExpenseLineItem[]>([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
   const [note, setNote] = useState("");
 
-  const filtered = filterByPeriod(expenses, period);
+  const filtered = filterByPeriod(expenses, period, customDate);
   const totalExpenses = filtered.reduce((s, e) => s + Number(e.amount), 0);
 
   const categoryTotals = filtered.reduce<Record<string, number>>((acc, e) => {
