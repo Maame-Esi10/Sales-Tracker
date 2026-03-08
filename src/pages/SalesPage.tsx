@@ -6,6 +6,7 @@ import ReceiptView from "@/components/ReceiptView";
 import OrderDetailView from "@/components/OrderDetailView";
 import { useMenuItems, useSales, type SaleWithItems } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
+import PeriodFilter from "@/components/PeriodFilter";
 
 const filterByPeriod = (sales: SaleWithItems[], period: string): SaleWithItems[] => {
   const now = new Date();
