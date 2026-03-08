@@ -358,12 +358,20 @@ const ExpensesPage = () => {
                       Note: {exp.note.split(" | ").slice(1).join(" | ")}
                     </div>
                   )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(exp.id); }}
-                    className="mt-3 flex items-center gap-1.5 text-xs text-destructive font-medium hover:underline"
-                  >
-                    <Trash2 size={12} /> Delete Expense
-                  </button>
+                  <div className="mt-3 flex items-center gap-4">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); startEdit(exp); }}
+                      className="flex items-center gap-1.5 text-xs text-accent font-medium hover:underline"
+                    >
+                      <Pencil size={12} /> Edit
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm(exp.id); }}
+                      className="flex items-center gap-1.5 text-xs text-destructive font-medium hover:underline"
+                    >
+                      <Trash2 size={12} /> Delete
+                    </button>
+                  </div>
                 </div>
               )}
             </button>
