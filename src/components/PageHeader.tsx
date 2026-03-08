@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { SHOP_NAME } from "@/data/store";
+import { SHOP_NAME } from "@/hooks/useSupabase";
 
 interface PageHeaderProps {
   title: string;
