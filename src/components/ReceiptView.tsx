@@ -69,6 +69,7 @@ const ReceiptView = ({ orderId, items, total, method, customerType, waiter, date
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Date</span><span>{date}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Customer</span><span>{customerType}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Payment</span><span>{method}</span></div>
+            {waiter && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Served by</span><span>{waiter}</span></div>}
           </div>
 
           <div className="border-t border-dashed border-border mb-5" />
