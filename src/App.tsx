@@ -12,18 +12,24 @@ import KitchenPage from "@/pages/KitchenPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import MenuPage from "@/pages/MenuPage";
 import ExpensesPage from "@/pages/ExpensesPage";
+import ProfilePage from "@/pages/ProfilePage";
 import LoginPage from "@/pages/LoginPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAdmin } = useAuth();
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
+
 const ProtectedRoutes = () => {
   const { user, loading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
   if (loading) return null;
-
   if (!user) return <Navigate to="/login" replace />;
 
   return (
@@ -33,9 +39,10 @@ const ProtectedRoutes = () => {
         <Routes>
           <Route path="/" element={<SalesPage />} />
           <Route path="/kitchen" element={<KitchenPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/analytics" element={<AdminRoute><AnalyticsPage /></AdminRoute>} />
           <Route path="/menu" element={<MenuPage />} />
-          <Route path="/expenses" element={<ExpensesPage />} />
+          <Route path="/expenses" element={<AdminRoute><ExpensesPage /></AdminRoute>} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <BottomNav />

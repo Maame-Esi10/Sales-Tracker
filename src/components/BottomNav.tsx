@@ -1,18 +1,23 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, ChefHat, BarChart3, BookOpen, Receipt } from "lucide-react";
+import { ShoppingBag, ChefHat, BarChart3, BookOpen, Receipt, UserCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 
-const tabs = [
-  { path: "/", label: "Sales", icon: ShoppingBag },
-  { path: "/kitchen", label: "Kitchen", icon: ChefHat },
-  { path: "/analytics", label: "Analytics", icon: BarChart3 },
-  { path: "/menu", label: "Menu", icon: BookOpen },
-  { path: "/expenses", label: "Expenses", icon: Receipt },
+const allTabs = [
+  { path: "/", label: "Sales", icon: ShoppingBag, roles: ["admin", "staff"] },
+  { path: "/kitchen", label: "Kitchen", icon: ChefHat, roles: ["admin", "staff"] },
+  { path: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin"] },
+  { path: "/menu", label: "Menu", icon: BookOpen, roles: ["admin", "staff"] },
+  { path: "/expenses", label: "Expenses", icon: Receipt, roles: ["admin"] },
+  { path: "/profile", label: "Profile", icon: UserCircle, roles: ["admin", "staff"] },
 ];
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { role } = useAuth();
+
+  const tabs = allTabs.filter((tab) => tab.roles.includes(role || "staff"));
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
