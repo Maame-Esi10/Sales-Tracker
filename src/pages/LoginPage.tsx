@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Coffee, ArrowLeft, Shield, User } from "lucide-react";
 import logo from "@/assets/logo.png";
@@ -9,7 +10,7 @@ import { toast } from "sonner";
 type View = "login" | "signup" | "forgot";
 
 const LoginPage = () => {
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, resetPassword } = useAuth();
   const [view, setView] = useState<View>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +18,8 @@ const LoginPage = () => {
   const [selectedRole, setSelectedRole] = useState<AppRole>("staff");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  if (!authLoading && user) return <Navigate to="/" replace />;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
