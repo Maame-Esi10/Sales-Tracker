@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { LogOut, User, Shield, Mail, Key, ChevronRight, Check, X } from "lucide-react";
+import { LogOut, User, Shield, Mail, Key, ChevronRight, Check, X, Phone } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,6 +174,22 @@ const ProfilePage = () => {
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Role</div>
               <div className="text-sm font-medium capitalize">{role === "admin" ? "Owner (Admin)" : "Staff"}</div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Contact Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="glass shadow-soft rounded-2xl p-4"
+        >
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-3">Company Contact</div>
+          <div className="flex items-center gap-3">
+            <Mail size={16} className="text-accent" />
+            <a href="mailto:purpleraincoffee@gmail.com" className="text-sm font-medium text-accent hover:underline">
+              purpleraincoffee@gmail.com
+            </a>
           </div>
         </motion.div>
 
