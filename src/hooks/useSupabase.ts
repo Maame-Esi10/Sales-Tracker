@@ -25,6 +25,17 @@ export function useMenuItems() {
 
   useEffect(() => { fetch(); }, [fetch]);
 
+  // Realtime
+  useEffect(() => {
+    const channel = supabase
+      .channel("menu_items_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, () => {
+        fetch();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetch]);
+
   const addItem = async (item: { name: string; price: number; category: string; cost: number }) => {
     const { data } = await supabase.from("menu_items").insert(item).select().single();
     if (data) setItems((prev) => [...prev, data]);
@@ -57,6 +68,17 @@ export function useStaff() {
   }, []);
 
   useEffect(() => { fetch(); }, [fetch]);
+
+  // Realtime
+  useEffect(() => {
+    const channel = supabase
+      .channel("staff_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "staff" }, () => {
+        fetch();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetch]);
 
   const addStaff = async (name: string) => {
     const { data } = await supabase.from("staff").insert({ name }).select().single();
@@ -94,6 +116,20 @@ export function useSales() {
   }, []);
 
   useEffect(() => { fetch(); }, [fetch]);
+
+  // Realtime
+  useEffect(() => {
+    const channel = supabase
+      .channel("sales_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "sales" }, () => {
+        fetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "sale_items" }, () => {
+        fetch();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetch]);
 
   const addSale = async (sale: {
     order_id: string;
@@ -146,6 +182,17 @@ export function useExpenses() {
   }, []);
 
   useEffect(() => { fetch(); }, [fetch]);
+
+  // Realtime
+  useEffect(() => {
+    const channel = supabase
+      .channel("expenses_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "expenses" }, () => {
+        fetch();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetch]);
 
   const addExpense = async (expense: { category: string; amount: number; note: string }) => {
     const { data } = await supabase.from("expenses").insert(expense).select().single();
