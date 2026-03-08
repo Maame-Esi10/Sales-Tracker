@@ -9,14 +9,15 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [displayName, setDisplayName] = useState<string>("");
 
-  const fetchRole = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .single();
-    if (data) setRole(data.role as AppRole);
+  const fetchUserData = useCallback(async (userId: string) => {
+    const [{ data: roleData }, { data: profileData }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId).single(),
+      supabase.from("profiles").select("display_name").eq("id", userId).single(),
+    ]);
+    if (roleData) setRole(roleData.role as AppRole);
+    if (profileData) setDisplayName(profileData.display_name);
   }, []);
 
   useEffect(() => {
