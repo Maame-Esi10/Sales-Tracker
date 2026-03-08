@@ -11,10 +11,19 @@ import PeriodFilter from "@/components/PeriodFilter";
 const COLORS = ["hsl(270 55% 50%)", "hsl(38 75% 55%)", "hsl(145 50% 42%)", "hsl(0 65% 52%)", "hsl(200 60% 50%)"];
 
 const AnalyticsPage = () => {
-  const [period, setPeriod] = useState("All Time");
+  const [period, setPeriod] = useState<string>("All Time");
+  const [customDate, setCustomDate] = useState<Date | undefined>();
   const { sales } = useSales();
 
   const filteredSales = useMemo(() => {
+    if (period === "Custom" && customDate) {
+      const dayStart = startOfDay(customDate);
+      const dayEnd = endOfDay(customDate);
+      return sales.filter((s) => {
+        const d = new Date(s.created_at);
+        return (isAfter(d, dayStart) || isEqual(d, dayStart)) && (isBefore(d, dayEnd) || isEqual(d, dayEnd));
+      });
+    }
     if (period === "All Time") return sales;
     const now = new Date();
     let cutoff: Date;
@@ -29,7 +38,7 @@ const AnalyticsPage = () => {
       const d = new Date(s.created_at);
       return isAfter(d, cutoff) || isEqual(d, cutoff);
     });
-  }, [sales, period]);
+  }, [sales, period, customDate]);
 
   const totalSales = filteredSales.reduce((s, sale) => s + Number(sale.total), 0);
   const orderCount = filteredSales.length;
