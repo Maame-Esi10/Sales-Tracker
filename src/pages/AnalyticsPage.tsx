@@ -50,14 +50,19 @@ const AnalyticsPage = () => {
   filteredSales.forEach((s) => { methodCounts[s.method] = (methodCounts[s.method] || 0) + 1; });
   const paymentData = Object.entries(methodCounts).map(([name, value]) => ({ name, value }));
 
-  const waiterSales: Record<string, { count: number; total: number }> = {};
+  const waiterSales: Record<string, { count: number; total: number; items: Record<string, number> }> = {};
   filteredSales.forEach((s) => {
     if (s.waiter) {
-      if (!waiterSales[s.waiter]) waiterSales[s.waiter] = { count: 0, total: 0 };
+      if (!waiterSales[s.waiter]) waiterSales[s.waiter] = { count: 0, total: 0, items: {} };
       waiterSales[s.waiter].count++;
       waiterSales[s.waiter].total += Number(s.total);
+      s.items.forEach((item) => {
+        waiterSales[s.waiter!].items[item.name] = (waiterSales[s.waiter!].items[item.name] || 0) + item.qty;
+      });
     }
   });
+
+  const [expandedWaiter, setExpandedWaiter] = useState<string | null>(null);
 
   // Build sales trend from filtered data
   const salesData = useMemo(() => {
