@@ -10,9 +10,7 @@ import { toast } from "sonner";
 type View = "login" | "signup" | "forgot";
 
 const LoginPage = () => {
-  const { user, loading, signIn, signUp, resetPassword } = useAuth();
-  
-  if (!loading && user) return <Navigate to="/" replace />;
+  const { user, loading: authLoading, signIn, signUp, resetPassword } = useAuth();
   const [view, setView] = useState<View>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +18,8 @@ const LoginPage = () => {
   const [selectedRole, setSelectedRole] = useState<AppRole>("staff");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  if (!authLoading && user) return <Navigate to="/" replace />;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
