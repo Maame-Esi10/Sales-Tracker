@@ -36,10 +36,27 @@ interface ExpenseLineItem {
   unitPrice: string;
 }
 
+const parseNoteItems = (note: string | null): { name: string; detail: string }[] => {
+  if (!note) return [];
+  // Try to parse "Item (qty × ₵price), Item2 (qty × ₵price) | optional note"
+  const mainPart = note.split(" | ")[0];
+  const matches = mainPart.match(/([^,]+?\s*\([^)]+\))/g);
+  if (!matches) return [{ name: note, detail: "" }];
+  return matches.map((m) => {
+    const trimmed = m.trim();
+    const parenIdx = trimmed.indexOf("(");
+    if (parenIdx > 0) {
+      return { name: trimmed.slice(0, parenIdx).trim(), detail: trimmed.slice(parenIdx) };
+    }
+    return { name: trimmed, detail: "" };
+  });
+};
+
 const ExpensesPage = () => {
   const { expenses, addExpense } = useExpenses();
   const [showAdd, setShowAdd] = useState(false);
   const [period, setPeriod] = useState("All Time");
+  const [expandedExpense, setExpandedExpense] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [category, setCategory] = useState("Ingredients");
   const [lineItems, setLineItems] = useState<ExpenseLineItem[]>([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
@@ -257,18 +274,44 @@ const ExpensesPage = () => {
 
       <div className="px-4 space-y-2">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">All Expenses</h2>
-        {filtered.map((exp, i) => (
-          <div key={exp.id} className="glass shadow-soft rounded-xl p-4 flex items-center gap-3 animate-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-accent">
-              {categoryIcons[exp.category]}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold">{exp.category}</div>
-              <div className="text-xs text-muted-foreground">{exp.note} · {formatDate(exp.created_at)}</div>
-            </div>
-            <span className="text-base font-bold text-destructive">-₵{Number(exp.amount).toFixed(2)}</span>
-          </div>
-        ))}
+        {filtered.map((exp, i) => {
+          const items = parseNoteItems(exp.note);
+          const isExpanded = expandedExpense === exp.id;
+          return (
+            <button 
+              key={exp.id} 
+              onClick={() => setExpandedExpense(isExpanded ? null : exp.id)}
+              className="w-full text-left glass shadow-soft rounded-xl p-4 animate-slide-up" 
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-accent">
+                  {categoryIcons[exp.category]}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold">{exp.category}</div>
+                  <div className="text-xs text-muted-foreground">{items.length > 1 ? `${items.length} items` : (exp.note || "")} · {formatDate(exp.created_at)}</div>
+                </div>
+                <span className="text-base font-bold text-destructive">-₵{Number(exp.amount).toFixed(2)}</span>
+              </div>
+              {isExpanded && items.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-border space-y-1.5 pl-[52px]">
+                  {items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-xs">
+                      <span className="text-foreground font-medium">{item.name}</span>
+                      <span className="text-muted-foreground">{item.detail}</span>
+                    </div>
+                  ))}
+                  {exp.note?.includes(" | ") && (
+                    <div className="text-xs text-muted-foreground italic mt-1">
+                      Note: {exp.note.split(" | ").slice(1).join(" | ")}
+                    </div>
+                  )}
+                </div>
+              )}
+            </button>
+          );
+        })}
         {filtered.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">No expenses for this period</p>
         )}
