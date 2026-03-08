@@ -247,7 +247,7 @@ const ExpensesPage = () => {
                   <span className="font-bold text-destructive text-lg">₵{grandTotal.toFixed(2)}</span>
                 </div>
               )}
-              <button onClick={handleAdd} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save Expense</button>
+              <button onClick={handleSave} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">{editingExpense ? "Update Expense" : "Save Expense"}</button>
             </div>
           </div>
         </div>
