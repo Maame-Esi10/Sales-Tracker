@@ -119,40 +119,48 @@ const ExpensesPage = () => {
               </select>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground uppercase">Items</span>
-                  <button onClick={addLineItem} className="flex items-center gap-1 text-xs text-accent font-medium">
-                    <Plus size={14} /> Add Item
-                  </button>
-                </div>
+                <span className="text-xs font-medium text-muted-foreground uppercase">Items</span>
                 {lineItems.map((li, idx) => (
-                  <div key={li.id} className="flex gap-2 items-center">
-                    <input 
-                      placeholder={`Item ${idx + 1}`} 
-                      value={li.item} 
-                      onChange={(e) => updateLineItem(li.id, "item", e.target.value)} 
-                      className="flex-[2] px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
-                    />
-                    <input 
-                      placeholder="Qty" 
-                      value={li.qty} 
-                      onChange={(e) => updateLineItem(li.id, "qty", e.target.value)} 
-                      className="flex-1 px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
-                    />
-                    <input 
-                      placeholder="₵" 
-                      type="number" 
-                      value={li.unitPrice} 
-                      onChange={(e) => updateLineItem(li.id, "unitPrice", e.target.value)} 
-                      className="flex-1 px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
-                    />
-                    {lineItems.length > 1 && (
-                      <button onClick={() => removeLineItem(li.id)} className="p-2 text-muted-foreground hover:text-destructive">
-                        <Trash2 size={16} />
-                      </button>
-                    )}
+                  <div key={li.id} className="bg-secondary/50 rounded-lg p-2.5 space-y-2">
+                    <div className="flex gap-2 items-center">
+                      <input 
+                        placeholder={`Item ${idx + 1} (e.g. Rice)`} 
+                        value={li.item} 
+                        onChange={(e) => updateLineItem(li.id, "item", e.target.value)} 
+                        className="flex-1 px-3 py-2 rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                      />
+                      {lineItems.length > 1 && (
+                        <button onClick={() => removeLineItem(li.id)} className="p-2 text-muted-foreground hover:text-destructive">
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <input 
+                        placeholder="Qty (e.g. 2kg)" 
+                        value={li.qty} 
+                        onChange={(e) => updateLineItem(li.id, "qty", e.target.value)} 
+                        className="flex-1 px-3 py-2 rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                      />
+                      <input 
+                        placeholder="Price ₵" 
+                        type="number" 
+                        value={li.unitPrice} 
+                        onChange={(e) => updateLineItem(li.id, "unitPrice", e.target.value)} 
+                        className="flex-1 px-3 py-2 rounded-lg bg-background text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                      />
+                      {getLineTotal(li) > 0 && (
+                        <span className="text-xs font-semibold text-foreground whitespace-nowrap">= ₵{getLineTotal(li).toFixed(2)}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
+                <button 
+                  onClick={addLineItem} 
+                  className="w-full py-2.5 rounded-lg border-2 border-dashed border-accent/40 text-accent text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-accent/5 transition-colors"
+                >
+                  <Plus size={16} /> Add Another Item
+                </button>
               </div>
 
               <input 
