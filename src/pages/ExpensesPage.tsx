@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Fuel, Zap, ShoppingCart, Users } from "lucide-react";
+import { Plus, X, Fuel, Zap, ShoppingCart, Users, Trash2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useExpenses } from "@/hooks/useSupabase";
 import type { ExpenseRow } from "@/hooks/useSupabase";
@@ -29,12 +29,21 @@ const filterByPeriod = (items: ExpenseRow[], period: string): ExpenseRow[] => {
   });
 };
 
+interface ExpenseLineItem {
+  id: string;
+  item: string;
+  qty: string;
+  unitPrice: string;
+}
+
 const ExpensesPage = () => {
   const { expenses, addExpense } = useExpenses();
   const [showAdd, setShowAdd] = useState(false);
   const [period, setPeriod] = useState("All Time");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [newExpense, setNewExpense] = useState({ category: "Ingredients", item: "", qty: "", unitPrice: "", note: "" });
+  const [category, setCategory] = useState("Ingredients");
+  const [lineItems, setLineItems] = useState<ExpenseLineItem[]>([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+  const [note, setNote] = useState("");
 
   const filtered = filterByPeriod(expenses, period);
   const totalExpenses = filtered.reduce((s, e) => s + Number(e.amount), 0);
@@ -44,18 +53,43 @@ const ExpensesPage = () => {
     return acc;
   }, {});
 
+  const addLineItem = () => {
+    setLineItems([...lineItems, { id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+  };
+
+  const updateLineItem = (id: string, field: keyof ExpenseLineItem, value: string) => {
+    setLineItems(lineItems.map(li => li.id === id ? { ...li, [field]: value } : li));
+  };
+
+  const removeLineItem = (id: string) => {
+    if (lineItems.length > 1) {
+      setLineItems(lineItems.filter(li => li.id !== id));
+    }
+  };
+
+  const getLineTotal = (li: ExpenseLineItem) => (Number(li.qty) || 1) * (Number(li.unitPrice) || 0);
+  const grandTotal = lineItems.reduce((sum, li) => sum + getLineTotal(li), 0);
+
   const handleAdd = async () => {
-    const qty = Number(newExpense.qty) || 1;
-    const unitPrice = Number(newExpense.unitPrice);
-    if (!unitPrice) return;
-    const totalAmount = qty * unitPrice;
-    const note = newExpense.item ? `${newExpense.item} (${qty} × ₵${unitPrice})` : newExpense.note;
-    await addExpense({ category: newExpense.category, amount: totalAmount, note });
-    setNewExpense({ category: "Ingredients", item: "", qty: "", unitPrice: "", note: "" });
+    const validItems = lineItems.filter(li => li.unitPrice && Number(li.unitPrice) > 0);
+    if (validItems.length === 0) return;
+
+    const itemsDescription = validItems
+      .map(li => `${li.item || "Item"} (${li.qty || 1} × ₵${li.unitPrice})`)
+      .join(", ");
+    const finalNote = note ? `${itemsDescription} | ${note}` : itemsDescription;
+
+    await addExpense({ category, amount: grandTotal, note: finalNote });
+    setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+    setNote("");
     setShowAdd(false);
   };
 
-  const calculatedTotal = (Number(newExpense.qty) || 1) * (Number(newExpense.unitPrice) || 0);
+  const resetForm = () => {
+    setShowAdd(false);
+    setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+    setNote("");
+  };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -77,22 +111,61 @@ const ExpensesPage = () => {
           <div className="glass shadow-card rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-semibold">New Expense</span>
-              <button onClick={() => setShowAdd(false)}><X size={18} className="text-muted-foreground" /></button>
+              <button onClick={resetForm}><X size={18} className="text-muted-foreground" /></button>
             </div>
-            <div className="space-y-2">
-              <select value={newExpense.category} onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none">
+            <div className="space-y-3">
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none">
                 {Object.keys(categoryIcons).map((c) => <option key={c}>{c}</option>)}
               </select>
-              <input placeholder="Item name (e.g. Rice)" value={newExpense.item} onChange={(e) => setNewExpense({ ...newExpense, item: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
-              <div className="flex gap-2">
-                <input placeholder="Qty (e.g. 1kg)" value={newExpense.qty} onChange={(e) => setNewExpense({ ...newExpense, qty: e.target.value })} className="flex-1 px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
-                <input placeholder="Unit Price (₵)" type="number" value={newExpense.unitPrice} onChange={(e) => setNewExpense({ ...newExpense, unitPrice: e.target.value })} className="flex-1 px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground uppercase">Items</span>
+                  <button onClick={addLineItem} className="flex items-center gap-1 text-xs text-accent font-medium">
+                    <Plus size={14} /> Add Item
+                  </button>
+                </div>
+                {lineItems.map((li, idx) => (
+                  <div key={li.id} className="flex gap-2 items-center">
+                    <input 
+                      placeholder={`Item ${idx + 1}`} 
+                      value={li.item} 
+                      onChange={(e) => updateLineItem(li.id, "item", e.target.value)} 
+                      className="flex-[2] px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                    />
+                    <input 
+                      placeholder="Qty" 
+                      value={li.qty} 
+                      onChange={(e) => updateLineItem(li.id, "qty", e.target.value)} 
+                      className="flex-1 px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                    />
+                    <input 
+                      placeholder="₵" 
+                      type="number" 
+                      value={li.unitPrice} 
+                      onChange={(e) => updateLineItem(li.id, "unitPrice", e.target.value)} 
+                      className="flex-1 px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                    />
+                    {lineItems.length > 1 && (
+                      <button onClick={() => removeLineItem(li.id)} className="p-2 text-muted-foreground hover:text-destructive">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-              <input placeholder="Note (optional)" value={newExpense.note} onChange={(e) => setNewExpense({ ...newExpense, note: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
-              {calculatedTotal > 0 && (
-                <div className="flex justify-between items-center px-1 py-2 text-sm">
-                  <span className="text-muted-foreground">Total Amount:</span>
-                  <span className="font-bold text-destructive">₵{calculatedTotal.toFixed(2)}</span>
+
+              <input 
+                placeholder="Note (optional)" 
+                value={note} 
+                onChange={(e) => setNote(e.target.value)} 
+                className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+              />
+
+              {grandTotal > 0 && (
+                <div className="flex justify-between items-center px-1 py-2 text-sm border-t border-border pt-3">
+                  <span className="text-muted-foreground">Total ({lineItems.filter(li => Number(li.unitPrice) > 0).length} items):</span>
+                  <span className="font-bold text-destructive text-lg">₵{grandTotal.toFixed(2)}</span>
                 </div>
               )}
               <button onClick={handleAdd} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save Expense</button>
