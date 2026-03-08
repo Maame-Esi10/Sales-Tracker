@@ -27,10 +27,10 @@ export function useAuth() {
         setUser(session?.user ?? null);
         setLoading(false);
         if (session?.user) {
-          // Defer to avoid Supabase deadlock
-          setTimeout(() => fetchRole(session.user.id), 0);
+          setTimeout(() => fetchUserData(session.user.id), 0);
         } else {
           setRole(null);
+          setDisplayName("");
         }
       }
     );
