@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Fuel, Zap, ShoppingCart, Users, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, X, Fuel, Zap, ShoppingCart, Users, Trash2, AlertTriangle, Pencil } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useExpenses } from "@/hooks/useSupabase";
 import type { ExpenseRow } from "@/hooks/useSupabase";
