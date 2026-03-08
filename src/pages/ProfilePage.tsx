@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { LogOut, User, Shield, Mail, Key, ChevronRight, Check, X } from "lucide-react";
+import { LogOut, User, Shield, Mail, Key, ChevronRight, Check, X, Phone } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
