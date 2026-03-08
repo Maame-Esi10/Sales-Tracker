@@ -80,7 +80,7 @@ const SalesPage = () => {
       total,
       method: paymentMethod,
       customer_type: customerType,
-      waiter: waiterName,
+      waiter: displayName,
       items: [...orderItems],
     });
     if (newSale) {
@@ -88,17 +88,6 @@ const SalesPage = () => {
     }
     setShowNewSale(false);
     setOrderItems([]);
-  };
-
-  const handleAddStaff = async () => {
-    if (!newStaffName.trim() || staff.some((s) => s.name === newStaffName.trim())) return;
-    await addStaff(newStaffName.trim());
-    setNewStaffName("");
-  };
-
-  const handleRemoveStaff = async (staffMember: typeof staff[0]) => {
-    await removeStaff(staffMember.id);
-    if (selectedWaiter === staffMember.name) setSelectedWaiter("");
   };
 
   if (receiptSale) {
