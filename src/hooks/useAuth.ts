@@ -65,6 +65,7 @@ export function useAuth() {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRole(null);
+    setDisplayName("");
   };
 
   const resetPassword = async (email: string) => {
