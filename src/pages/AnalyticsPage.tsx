@@ -1,19 +1,37 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TrendingUp, ShoppingBag, Receipt, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import MetricCard from "@/components/MetricCard";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { useSales } from "@/hooks/useSupabase";
+import { startOfDay, startOfWeek, startOfMonth, isAfter, isEqual, format, subDays, eachDayOfInterval } from "date-fns";
 
 const COLORS = ["hsl(270 55% 50%)", "hsl(38 75% 55%)", "hsl(145 50% 42%)", "hsl(0 65% 52%)", "hsl(200 60% 50%)"];
 
 const AnalyticsPage = () => {
-  const [period, setPeriod] = useState("Week");
+  const [period, setPeriod] = useState("All Time");
   const { sales } = useSales();
 
-  const totalSales = sales.reduce((s, sale) => s + Number(sale.total), 0);
-  const orderCount = sales.length;
+  const filteredSales = useMemo(() => {
+    if (period === "All Time") return sales;
+    const now = new Date();
+    let cutoff: Date;
+    if (period === "Today") {
+      cutoff = startOfDay(now);
+    } else if (period === "Week") {
+      cutoff = startOfWeek(now, { weekStartsOn: 1 });
+    } else {
+      cutoff = startOfMonth(now);
+    }
+    return sales.filter((s) => {
+      const d = new Date(s.created_at);
+      return isAfter(d, cutoff) || isEqual(d, cutoff);
+    });
+  }, [sales, period]);
+
+  const totalSales = filteredSales.reduce((s, sale) => s + Number(sale.total), 0);
+  const orderCount = filteredSales.length;
 
   const itemCounts: Record<string, number> = {};
   const itemRevenue: Record<string, number> = {};
