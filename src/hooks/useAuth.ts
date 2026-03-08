@@ -77,5 +77,5 @@ export function useAuth() {
 
   const isAdmin = role === "admin";
 
-  return { user, session, loading, role, isAdmin, signIn, signUp, signOut, resetPassword };
+  return { user, session, loading, role, isAdmin, displayName, signIn, signUp, signOut, resetPassword };
 }
