@@ -34,7 +34,7 @@ const ExpensesPage = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [period, setPeriod] = useState("All Time");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [newExpense, setNewExpense] = useState({ category: "Ingredients", amount: "", note: "" });
+  const [newExpense, setNewExpense] = useState({ category: "Ingredients", item: "", qty: "", unitPrice: "", note: "" });
 
   const filtered = filterByPeriod(expenses, period);
   const totalExpenses = filtered.reduce((s, e) => s + Number(e.amount), 0);
