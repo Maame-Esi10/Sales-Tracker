@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Coffee, ArrowLeft, Shield, User } from "lucide-react";
 import logo from "@/assets/logo.png";
@@ -9,7 +10,9 @@ import { toast } from "sonner";
 type View = "login" | "signup" | "forgot";
 
 const LoginPage = () => {
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { user, loading, signIn, signUp, resetPassword } = useAuth();
+  
+  if (!loading && user) return <Navigate to="/" replace />;
   const [view, setView] = useState<View>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
