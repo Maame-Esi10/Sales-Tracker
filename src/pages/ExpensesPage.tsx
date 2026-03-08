@@ -45,11 +45,17 @@ const ExpensesPage = () => {
   }, {});
 
   const handleAdd = async () => {
-    if (!newExpense.amount) return;
-    await addExpense({ category: newExpense.category, amount: Number(newExpense.amount), note: newExpense.note });
-    setNewExpense({ category: "Ingredients", amount: "", note: "" });
+    const qty = Number(newExpense.qty) || 1;
+    const unitPrice = Number(newExpense.unitPrice);
+    if (!unitPrice) return;
+    const totalAmount = qty * unitPrice;
+    const note = newExpense.item ? `${newExpense.item} (${qty} × ₵${unitPrice})` : newExpense.note;
+    await addExpense({ category: newExpense.category, amount: totalAmount, note });
+    setNewExpense({ category: "Ingredients", item: "", qty: "", unitPrice: "", note: "" });
     setShowAdd(false);
   };
+
+  const calculatedTotal = (Number(newExpense.qty) || 1) * (Number(newExpense.unitPrice) || 0);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
