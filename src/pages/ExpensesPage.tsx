@@ -115,8 +115,51 @@ const ExpensesPage = () => {
 
   const resetForm = () => {
     setShowAdd(false);
+    setEditingExpense(null);
     setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
     setNote("");
+    setCategory("Ingredients");
+  };
+
+  const startEdit = (exp: ExpenseRow) => {
+    // Parse existing note back into line items
+    const parsed = parseNoteItems(exp.note);
+    const items: ExpenseLineItem[] = parsed.map((p) => {
+      // Try to extract qty and price from detail like "(2kg × ₵24)"
+      const match = p.detail.match(/\(([^×]+)×\s*₵?(\d+\.?\d*)\)/);
+      return {
+        id: crypto.randomUUID(),
+        item: p.name,
+        qty: match ? match[1].trim() : "",
+        unitPrice: match ? match[2] : "",
+      };
+    });
+    if (items.length === 0) items.push({ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" });
+    
+    setEditingExpense(exp);
+    setCategory(exp.category);
+    setLineItems(items);
+    const noteParts = exp.note?.split(" | ");
+    setNote(noteParts && noteParts.length > 1 ? noteParts.slice(1).join(" | ") : "");
+    setShowAdd(true);
+    setExpandedExpense(null);
+  };
+
+  const handleSave = async () => {
+    const validItems = lineItems.filter(li => li.unitPrice && Number(li.unitPrice) > 0);
+    if (validItems.length === 0) return;
+
+    const itemsDescription = validItems
+      .map(li => `${li.item || "Item"} (${li.qty || 1} × ₵${li.unitPrice})`)
+      .join(", ");
+    const finalNote = note ? `${itemsDescription} | ${note}` : itemsDescription;
+
+    if (editingExpense) {
+      await updateExpense(editingExpense.id, { category, amount: grandTotal, note: finalNote });
+    } else {
+      await addExpense({ category, amount: grandTotal, note: finalNote });
+    }
+    resetForm();
   };
 
   const formatDate = (dateStr: string) => {
