@@ -5,15 +5,25 @@ import PageHeader from "@/components/PageHeader";
 import MetricCard from "@/components/MetricCard";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { useSales } from "@/hooks/useSupabase";
-import { startOfDay, startOfWeek, startOfMonth, isAfter, isEqual, format, subDays, eachDayOfInterval } from "date-fns";
+import { startOfDay, startOfWeek, startOfMonth, endOfDay, isAfter, isEqual, isBefore, format, subDays, eachDayOfInterval } from "date-fns";
+import PeriodFilter from "@/components/PeriodFilter";
 
 const COLORS = ["hsl(270 55% 50%)", "hsl(38 75% 55%)", "hsl(145 50% 42%)", "hsl(0 65% 52%)", "hsl(200 60% 50%)"];
 
 const AnalyticsPage = () => {
-  const [period, setPeriod] = useState("All Time");
+  const [period, setPeriod] = useState<string>("All Time");
+  const [customDate, setCustomDate] = useState<Date | undefined>();
   const { sales } = useSales();
 
   const filteredSales = useMemo(() => {
+    if (period === "Custom" && customDate) {
+      const dayStart = startOfDay(customDate);
+      const dayEnd = endOfDay(customDate);
+      return sales.filter((s) => {
+        const d = new Date(s.created_at);
+        return (isAfter(d, dayStart) || isEqual(d, dayStart)) && (isBefore(d, dayEnd) || isEqual(d, dayEnd));
+      });
+    }
     if (period === "All Time") return sales;
     const now = new Date();
     let cutoff: Date;
@@ -28,7 +38,7 @@ const AnalyticsPage = () => {
       const d = new Date(s.created_at);
       return isAfter(d, cutoff) || isEqual(d, cutoff);
     });
-  }, [sales, period]);
+  }, [sales, period, customDate]);
 
   const totalSales = filteredSales.reduce((s, sale) => s + Number(sale.total), 0);
   const orderCount = filteredSales.length;
@@ -95,12 +105,8 @@ const AnalyticsPage = () => {
     <div className="min-h-screen pb-24">
       <PageHeader title="Analytics" />
 
-      <div className="px-4 mb-4 flex gap-2">
-        {["Today", "Week", "Month", "All Time"].map((p) => (
-          <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
-            {p}
-          </button>
-        ))}
+      <div className="px-4 mb-4">
+        <PeriodFilter period={period} onPeriodChange={setPeriod} customDate={customDate} onCustomDateChange={setCustomDate} />
       </div>
 
       <div className="px-4 grid grid-cols-2 gap-2 mb-6">

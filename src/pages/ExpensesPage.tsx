@@ -3,7 +3,8 @@ import { Plus, X, Fuel, Zap, ShoppingCart, Users, Trash2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useExpenses } from "@/hooks/useSupabase";
 import type { ExpenseRow } from "@/hooks/useSupabase";
-import { startOfDay, startOfWeek as dateFnsStartOfWeek, startOfMonth, isAfter, isEqual } from "date-fns";
+import { startOfDay, startOfWeek as dateFnsStartOfWeek, startOfMonth, endOfDay, isAfter, isEqual, isBefore } from "date-fns";
+import PeriodFilter from "@/components/PeriodFilter";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   Gas: <Fuel size={16} />,
@@ -12,7 +13,15 @@ const categoryIcons: Record<string, React.ReactNode> = {
   "Staff Wages": <Users size={16} />,
 };
 
-const filterByPeriod = (items: ExpenseRow[], period: string): ExpenseRow[] => {
+const filterByPeriod = (items: ExpenseRow[], period: string, customDate?: Date): ExpenseRow[] => {
+  if (period === "Custom" && customDate) {
+    const dayStart = startOfDay(customDate);
+    const dayEnd = endOfDay(customDate);
+    return items.filter((item) => {
+      const d = new Date(item.created_at);
+      return (isAfter(d, dayStart) || isEqual(d, dayStart)) && (isBefore(d, dayEnd) || isEqual(d, dayEnd));
+    });
+  }
   if (period === "All Time") return items;
   const now = new Date();
   let cutoff: Date;
@@ -55,14 +64,15 @@ const parseNoteItems = (note: string | null): { name: string; detail: string }[]
 const ExpensesPage = () => {
   const { expenses, addExpense } = useExpenses();
   const [showAdd, setShowAdd] = useState(false);
-  const [period, setPeriod] = useState("All Time");
+  const [period, setPeriod] = useState<string>("All Time");
+  const [customDate, setCustomDate] = useState<Date | undefined>();
   const [expandedExpense, setExpandedExpense] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [category, setCategory] = useState("Ingredients");
   const [lineItems, setLineItems] = useState<ExpenseLineItem[]>([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
   const [note, setNote] = useState("");
 
-  const filtered = filterByPeriod(expenses, period);
+  const filtered = filterByPeriod(expenses, period, customDate);
   const totalExpenses = filtered.reduce((s, e) => s + Number(e.amount), 0);
 
   const categoryTotals = filtered.reduce<Record<string, number>>((acc, e) => {
@@ -198,12 +208,8 @@ const ExpensesPage = () => {
         </div>
       )}
 
-      <div className="px-4 mb-3 flex gap-2">
-        {["Today", "Week", "Month", "All Time"].map((p) => (
-          <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
-            {p}
-          </button>
-        ))}
+      <div className="px-4 mb-3">
+        <PeriodFilter period={period} onPeriodChange={setPeriod} customDate={customDate} onCustomDateChange={setCustomDate} />
       </div>
 
       <div className="px-4 mb-4">

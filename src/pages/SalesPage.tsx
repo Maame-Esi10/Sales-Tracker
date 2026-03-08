@@ -6,8 +6,18 @@ import ReceiptView from "@/components/ReceiptView";
 import OrderDetailView from "@/components/OrderDetailView";
 import { useMenuItems, useSales, type SaleWithItems } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
+import PeriodFilter from "@/components/PeriodFilter";
 
-const filterByPeriod = (sales: SaleWithItems[], period: string): SaleWithItems[] => {
+const filterByPeriod = (sales: SaleWithItems[], period: string, customDate?: Date): SaleWithItems[] => {
+  if (period === "Custom" && customDate) {
+    const dayStart = new Date(customDate.getFullYear(), customDate.getMonth(), customDate.getDate());
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+    return sales.filter((sale) => {
+      const d = new Date(sale.created_at);
+      return d >= dayStart && d < dayEnd;
+    });
+  }
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfDay);
@@ -59,7 +69,8 @@ const SalesPage = () => {
   const [receiptSale, setReceiptSale] = useState<SaleWithItems | null>(null);
   const [detailSale, setDetailSale] = useState<SaleWithItems | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "MoMo" | "Card">("Cash");
-  const [period, setPeriod] = useState("Today");
+  const [period, setPeriod] = useState<string>("Today");
+  const [customDate, setCustomDate] = useState<Date | undefined>();
 
   const getItemQty = (name: string) => orderItems.find((i) => i.name === name)?.qty || 0;
 
@@ -251,7 +262,7 @@ const SalesPage = () => {
     );
   }
 
-  const filtered = filterByPeriod(sales, period);
+  const filtered = filterByPeriod(sales, period, customDate);
   const periodTotal = filtered.reduce((s, sale) => s + Number(sale.total), 0);
 
   return (
@@ -265,12 +276,8 @@ const SalesPage = () => {
         }
       />
 
-      <div className="px-4 mb-3 flex gap-2">
-        {["Today", "Week", "Month", "All Time"].map((p) => (
-          <button key={p} onClick={() => setPeriod(p)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${period === p ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
-            {p}
-          </button>
-        ))}
+      <div className="px-4 mb-3">
+        <PeriodFilter period={period} onPeriodChange={setPeriod} customDate={customDate} onCustomDateChange={setCustomDate} />
       </div>
 
       <div className="px-4 mb-3">
