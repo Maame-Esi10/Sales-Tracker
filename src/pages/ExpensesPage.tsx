@@ -29,12 +29,21 @@ const filterByPeriod = (items: ExpenseRow[], period: string): ExpenseRow[] => {
   });
 };
 
+interface ExpenseLineItem {
+  id: string;
+  item: string;
+  qty: string;
+  unitPrice: string;
+}
+
 const ExpensesPage = () => {
   const { expenses, addExpense } = useExpenses();
   const [showAdd, setShowAdd] = useState(false);
   const [period, setPeriod] = useState("All Time");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [newExpense, setNewExpense] = useState({ category: "Ingredients", item: "", qty: "", unitPrice: "", note: "" });
+  const [category, setCategory] = useState("Ingredients");
+  const [lineItems, setLineItems] = useState<ExpenseLineItem[]>([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+  const [note, setNote] = useState("");
 
   const filtered = filterByPeriod(expenses, period);
   const totalExpenses = filtered.reduce((s, e) => s + Number(e.amount), 0);
@@ -44,18 +53,43 @@ const ExpensesPage = () => {
     return acc;
   }, {});
 
+  const addLineItem = () => {
+    setLineItems([...lineItems, { id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+  };
+
+  const updateLineItem = (id: string, field: keyof ExpenseLineItem, value: string) => {
+    setLineItems(lineItems.map(li => li.id === id ? { ...li, [field]: value } : li));
+  };
+
+  const removeLineItem = (id: string) => {
+    if (lineItems.length > 1) {
+      setLineItems(lineItems.filter(li => li.id !== id));
+    }
+  };
+
+  const getLineTotal = (li: ExpenseLineItem) => (Number(li.qty) || 1) * (Number(li.unitPrice) || 0);
+  const grandTotal = lineItems.reduce((sum, li) => sum + getLineTotal(li), 0);
+
   const handleAdd = async () => {
-    const qty = Number(newExpense.qty) || 1;
-    const unitPrice = Number(newExpense.unitPrice);
-    if (!unitPrice) return;
-    const totalAmount = qty * unitPrice;
-    const note = newExpense.item ? `${newExpense.item} (${qty} × ₵${unitPrice})` : newExpense.note;
-    await addExpense({ category: newExpense.category, amount: totalAmount, note });
-    setNewExpense({ category: "Ingredients", item: "", qty: "", unitPrice: "", note: "" });
+    const validItems = lineItems.filter(li => li.unitPrice && Number(li.unitPrice) > 0);
+    if (validItems.length === 0) return;
+
+    const itemsDescription = validItems
+      .map(li => `${li.item || "Item"} (${li.qty || 1} × ₵${li.unitPrice})`)
+      .join(", ");
+    const finalNote = note ? `${itemsDescription} | ${note}` : itemsDescription;
+
+    await addExpense({ category, amount: grandTotal, note: finalNote });
+    setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+    setNote("");
     setShowAdd(false);
   };
 
-  const calculatedTotal = (Number(newExpense.qty) || 1) * (Number(newExpense.unitPrice) || 0);
+  const resetForm = () => {
+    setShowAdd(false);
+    setLineItems([{ id: crypto.randomUUID(), item: "", qty: "", unitPrice: "" }]);
+    setNote("");
+  };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
