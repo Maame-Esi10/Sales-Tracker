@@ -132,39 +132,13 @@ const SalesPage = () => {
           <h1 className="text-2xl font-bold text-display">New Sale</h1>
         </div>
 
-        {/* Waiter selection */}
-        <div className="px-4 mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Waiter / Waitress</label>
-            <button onClick={() => setEditingStaff(!editingStaff)} className="text-xs text-accent font-medium flex items-center gap-1">
-              <Pencil size={12} /> {editingStaff ? "Done" : "Edit"}
-            </button>
+        {/* Logged-in staff indicator */}
+        {displayName && (
+          <div className="px-4 mb-4">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Serving as</div>
+            <div className="px-4 py-2 rounded-xl bg-accent text-accent-foreground text-sm font-semibold inline-block">{displayName}</div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {staff.map((w) => (
-              <div key={w.id} className="relative">
-                <button onClick={() => setSelectedWaiter(w.name)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${(selectedWaiter || staff[0]?.name) === w.name ? "bg-accent text-accent-foreground shadow-sm" : "bg-secondary text-secondary-foreground"}`}>{w.name}</button>
-                {editingStaff && (
-                  <button onClick={() => handleRemoveStaff(w)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
-                    <X size={10} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          <AnimatePresence>
-            {editingStaff && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                <div className="flex gap-2 mt-2">
-                  <input value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)} placeholder="New name..." className="flex-1 px-3 py-2 rounded-xl bg-secondary text-sm outline-none focus:ring-2 focus:ring-ring/30" onKeyDown={(e) => e.key === "Enter" && handleAddStaff()} />
-                  <button onClick={handleAddStaff} className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
-                    <Plus size={14} />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        )}
 
         {/* Customer type */}
         <div className="px-4 mb-4">
