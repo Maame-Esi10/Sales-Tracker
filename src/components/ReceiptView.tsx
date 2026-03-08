@@ -13,11 +13,12 @@ interface ReceiptViewProps {
   total: number;
   method: string;
   customerType: string;
+  waiter?: string;
   date: string;
   onClose: () => void;
 }
 
-const ReceiptView = ({ orderId, items, total, method, customerType, date, onClose }: ReceiptViewProps) => {
+const ReceiptView = ({ orderId, items, total, method, customerType, waiter, date, onClose }: ReceiptViewProps) => {
   const handlePrint = () => window.print();
 
   const handleShare = async () => {
@@ -68,6 +69,7 @@ const ReceiptView = ({ orderId, items, total, method, customerType, date, onClos
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Date</span><span>{date}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Customer</span><span>{customerType}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Payment</span><span>{method}</span></div>
+            {waiter && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Served by</span><span>{waiter}</span></div>}
           </div>
 
           <div className="border-t border-dashed border-border mb-5" />

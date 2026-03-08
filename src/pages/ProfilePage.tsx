@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { LogOut, User, Shield, Mail, ChevronRight } from "lucide-react";
+import { LogOut, User, Shield, Mail, Key, ChevronRight, Check, X } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const ProfilePage = () => {
-  const { user, role, isAdmin, signOut } = useAuth();
+  const { user, role, isAdmin, signOut, resetPassword } = useAuth();
   const [displayName, setDisplayName] = useState("");
-  const [editing, setEditing] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -34,12 +37,32 @@ const ProfilePage = () => {
       toast.error("Failed to update name");
     } else {
       toast.success("Name updated");
-      setEditing(false);
+      setEditingName(false);
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleUpdateEmail = async () => {
+    if (!newEmail.trim()) return;
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Confirmation sent to your new email");
+      setEditingEmail(false);
+      setNewEmail("");
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!user?.email) return;
+    setChangingPassword(true);
+    const { error } = await resetPassword(user.email);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Password reset link sent to your email");
+    }
+    setChangingPassword(false);
   };
 
   return (
@@ -60,7 +83,7 @@ const ProfilePage = () => {
             <User size={32} className="text-primary-foreground" />
           </div>
 
-          {editing ? (
+          {editingName ? (
             <div className="flex gap-2 w-full max-w-xs">
               <input
                 value={displayName}
@@ -73,7 +96,7 @@ const ProfilePage = () => {
               </button>
             </div>
           ) : (
-            <button onClick={() => setEditing(true)} className="text-lg font-bold text-display hover:text-accent transition-colors">
+            <button onClick={() => setEditingName(true)} className="text-lg font-bold text-display hover:text-accent transition-colors">
               {displayName || "Unnamed"}
             </button>
           )}
@@ -86,27 +109,71 @@ const ProfilePage = () => {
           </div>
         </motion.div>
 
-        {/* Info */}
+        {/* Email */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
           className="glass shadow-soft rounded-2xl divide-y divide-border"
         >
-          <div className="p-4 flex items-center gap-3">
-            <Mail size={16} className="text-muted-foreground" />
-            <div className="flex-1">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Email</div>
-              <div className="text-sm font-medium">{user?.email}</div>
+          <div className="p-4">
+            <div className="flex items-center gap-3">
+              <Mail size={16} className="text-muted-foreground" />
+              <div className="flex-1">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Email</div>
+                <div className="text-sm font-medium">{user?.email}</div>
+              </div>
+              {!editingEmail ? (
+                <button
+                  onClick={() => { setEditingEmail(true); setNewEmail(user?.email || ""); }}
+                  className="text-xs text-accent font-medium"
+                >
+                  Change
+                </button>
+              ) : (
+                <button onClick={() => setEditingEmail(false)}>
+                  <X size={16} className="text-muted-foreground" />
+                </button>
+              )}
             </div>
+            {editingEmail && (
+              <div className="flex gap-2 mt-3">
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="New email address"
+                  className="flex-1 px-3 py-2 rounded-xl bg-secondary text-sm outline-none focus:ring-2 focus:ring-ring/30"
+                  onKeyDown={(e) => e.key === "Enter" && handleUpdateEmail()}
+                />
+                <button onClick={handleUpdateEmail} className="px-4 py-2 rounded-xl text-sm font-medium text-primary-foreground gradient-purple flex items-center gap-1">
+                  <Check size={14} /> Save
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Password */}
+          <button
+            onClick={handleResetPassword}
+            disabled={changingPassword}
+            className="w-full p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors"
+          >
+            <Key size={16} className="text-muted-foreground" />
+            <div className="flex-1 text-left">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Password</div>
+              <div className="text-sm font-medium">{changingPassword ? "Sending reset link..." : "Send reset link to email"}</div>
+            </div>
+            <ChevronRight size={14} className="text-muted-foreground" />
+          </button>
+
+          {/* Role */}
           <div className="p-4 flex items-center gap-3">
             <Shield size={16} className="text-muted-foreground" />
             <div className="flex-1">
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Role</div>
               <div className="text-sm font-medium capitalize">{role === "admin" ? "Owner (Admin)" : "Staff"}</div>
             </div>
-            <ChevronRight size={14} className="text-muted-foreground" />
           </div>
         </motion.div>
 
@@ -115,7 +182,7 @@ const ProfilePage = () => {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          onClick={handleSignOut}
+          onClick={() => signOut()}
           className="w-full glass shadow-soft rounded-2xl p-4 flex items-center gap-3 text-destructive hover:bg-destructive/10 transition-colors"
         >
           <LogOut size={18} />

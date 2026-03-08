@@ -115,6 +115,7 @@ const SalesPage = () => {
         total={receiptSale.total}
         method={receiptSale.method}
         customerType={receiptSale.customer_type}
+        waiter={receiptSale.waiter || undefined}
         date={formatDate(receiptSale.created_at)}
         onClose={() => setReceiptSale(null)}
       />
