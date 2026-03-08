@@ -174,24 +174,6 @@ const ExpensesPage = () => {
         </div>
       )}
 
-      {showAdd && (
-        <div className="px-4 mb-4 animate-slide-up">
-          <div className="glass shadow-card rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold">New Expense</span>
-              <button onClick={() => setShowAdd(false)}><X size={18} className="text-muted-foreground" /></button>
-            </div>
-            <div className="space-y-2">
-              <select value={newExpense.category} onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none">
-                {Object.keys(categoryIcons).map((c) => <option key={c}>{c}</option>)}
-              </select>
-              <input placeholder="Amount (₵)" type="number" value={newExpense.amount} onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
-              <input placeholder="Note (optional)" value={newExpense.note} onChange={(e) => setNewExpense({ ...newExpense, note: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
-              <button onClick={handleAdd} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save Expense</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="px-4 space-y-2">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">All Expenses</h2>
