@@ -3,7 +3,8 @@ import { Plus, X, Fuel, Zap, ShoppingCart, Users, Trash2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useExpenses } from "@/hooks/useSupabase";
 import type { ExpenseRow } from "@/hooks/useSupabase";
-import { startOfDay, startOfWeek as dateFnsStartOfWeek, startOfMonth, isAfter, isEqual } from "date-fns";
+import { startOfDay, startOfWeek as dateFnsStartOfWeek, startOfMonth, endOfDay, isAfter, isEqual, isBefore } from "date-fns";
+import PeriodFilter from "@/components/PeriodFilter";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   Gas: <Fuel size={16} />,
