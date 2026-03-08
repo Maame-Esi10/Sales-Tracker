@@ -262,7 +262,7 @@ const SalesPage = () => {
     );
   }
 
-  const filtered = filterByPeriod(sales, period);
+  const filtered = filterByPeriod(sales, period, customDate);
   const periodTotal = filtered.reduce((s, sale) => s + Number(sale.total), 0);
 
   return (
