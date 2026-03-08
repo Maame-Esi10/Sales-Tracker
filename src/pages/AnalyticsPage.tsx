@@ -50,14 +50,19 @@ const AnalyticsPage = () => {
   filteredSales.forEach((s) => { methodCounts[s.method] = (methodCounts[s.method] || 0) + 1; });
   const paymentData = Object.entries(methodCounts).map(([name, value]) => ({ name, value }));
 
-  const waiterSales: Record<string, { count: number; total: number }> = {};
+  const waiterSales: Record<string, { count: number; total: number; items: Record<string, number> }> = {};
   filteredSales.forEach((s) => {
     if (s.waiter) {
-      if (!waiterSales[s.waiter]) waiterSales[s.waiter] = { count: 0, total: 0 };
+      if (!waiterSales[s.waiter]) waiterSales[s.waiter] = { count: 0, total: 0, items: {} };
       waiterSales[s.waiter].count++;
       waiterSales[s.waiter].total += Number(s.total);
+      s.items.forEach((item) => {
+        waiterSales[s.waiter!].items[item.name] = (waiterSales[s.waiter!].items[item.name] || 0) + item.qty;
+      });
     }
   });
+
+  const [expandedWaiter, setExpandedWaiter] = useState<string | null>(null);
 
   // Build sales trend from filtered data
   const salesData = useMemo(() => {
@@ -181,17 +186,29 @@ const AnalyticsPage = () => {
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Staff Performance</h2>
         <div className="glass shadow-soft rounded-xl divide-y divide-border">
           {Object.entries(waiterSales).sort((a, b) => b[1].total - a[1].total).map(([name, data], i) => (
-            <motion.div key={name} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-center justify-between p-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground" style={{ background: `linear-gradient(135deg, ${COLORS[i % COLORS.length]}, ${COLORS[(i + 1) % COLORS.length]})` }}>
-                  {name[0]}
+            <motion.div key={name} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex flex-col">
+              <button onClick={() => setExpandedWaiter(expandedWaiter === name ? null : name)} className="flex items-center justify-between p-3 w-full text-left hover:bg-secondary/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground" style={{ background: `linear-gradient(135deg, ${COLORS[i % COLORS.length]}, ${COLORS[(i + 1) % COLORS.length]})` }}>
+                    {name[0]}
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold">{name}</div>
+                    <div className="text-xs text-muted-foreground">{data.count} orders</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-sm font-semibold">{name}</div>
-                  <div className="text-xs text-muted-foreground">{data.count} orders</div>
+                <span className="text-sm font-bold text-accent">₵{data.total.toFixed(2)}</span>
+              </button>
+              {expandedWaiter === name && (
+                <div className="px-3 pb-3 pl-14 space-y-1 animate-slide-up">
+                  {Object.entries(data.items).sort((a, b) => b[1] - a[1]).map(([itemName, qty]) => (
+                    <div key={itemName} className="flex justify-between text-xs text-muted-foreground">
+                      <span>{itemName}</span>
+                      <span className="font-medium">{qty} sold</span>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <span className="text-sm font-bold text-accent">₵{data.total.toFixed(2)}</span>
+              )}
             </motion.div>
           ))}
           {Object.keys(waiterSales).length === 0 && (
