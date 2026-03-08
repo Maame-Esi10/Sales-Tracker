@@ -13,6 +13,7 @@ interface ReceiptViewProps {
   total: number;
   method: string;
   customerType: string;
+  waiter?: string;
   date: string;
   onClose: () => void;
 }
