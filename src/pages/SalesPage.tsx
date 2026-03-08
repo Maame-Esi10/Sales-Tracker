@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Plus, Clock, CreditCard, Smartphone, Banknote, ArrowLeft, Minus, Printer, Pencil, X, Check } from "lucide-react";
+import { Plus, Clock, CreditCard, Smartphone, Banknote, ArrowLeft, Minus, Printer, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ReceiptView from "@/components/ReceiptView";
 import OrderDetailView from "@/components/OrderDetailView";
-import { useMenuItems, useStaff, useSales, type SaleWithItems } from "@/hooks/useSupabase";
+import { useMenuItems, useSales, type SaleWithItems } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 
 const filterByPeriod = (sales: SaleWithItems[], period: string): SaleWithItems[] => {
   const now = new Date();
