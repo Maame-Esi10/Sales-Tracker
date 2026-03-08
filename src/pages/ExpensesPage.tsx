@@ -13,7 +13,15 @@ const categoryIcons: Record<string, React.ReactNode> = {
   "Staff Wages": <Users size={16} />,
 };
 
-const filterByPeriod = (items: ExpenseRow[], period: string): ExpenseRow[] => {
+const filterByPeriod = (items: ExpenseRow[], period: string, customDate?: Date): ExpenseRow[] => {
+  if (period === "Custom" && customDate) {
+    const dayStart = startOfDay(customDate);
+    const dayEnd = endOfDay(customDate);
+    return items.filter((item) => {
+      const d = new Date(item.created_at);
+      return (isAfter(d, dayStart) || isEqual(d, dayStart)) && (isBefore(d, dayEnd) || isEqual(d, dayEnd));
+    });
+  }
   if (period === "All Time") return items;
   const now = new Date();
   let cutoff: Date;
