@@ -181,7 +181,7 @@ const ExpensesPage = () => {
         <div className="px-4 mb-4 animate-slide-up">
           <div className="glass shadow-card rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold">New Expense</span>
+              <span className="text-sm font-semibold">{editingExpense ? "Edit Expense" : "New Expense"}</span>
               <button onClick={resetForm}><X size={18} className="text-muted-foreground" /></button>
             </div>
             <div className="space-y-3">
