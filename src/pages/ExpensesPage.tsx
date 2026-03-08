@@ -67,8 +67,7 @@ const ExpensesPage = () => {
     }
   };
 
-  const getLineTotal = (li: ExpenseLineItem) => (Number(li.qty) || 1) * (Number(li.unitPrice) || 0);
-  const grandTotal = lineItems.reduce((sum, li) => sum + getLineTotal(li), 0);
+  const grandTotal = lineItems.reduce((sum, li) => sum + (Number(li.unitPrice) || 0), 0);
 
   const handleAdd = async () => {
     const validItems = lineItems.filter(li => li.unitPrice && Number(li.unitPrice) > 0);
