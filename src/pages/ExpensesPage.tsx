@@ -111,22 +111,61 @@ const ExpensesPage = () => {
           <div className="glass shadow-card rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-semibold">New Expense</span>
-              <button onClick={() => setShowAdd(false)}><X size={18} className="text-muted-foreground" /></button>
+              <button onClick={resetForm}><X size={18} className="text-muted-foreground" /></button>
             </div>
-            <div className="space-y-2">
-              <select value={newExpense.category} onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none">
+            <div className="space-y-3">
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none">
                 {Object.keys(categoryIcons).map((c) => <option key={c}>{c}</option>)}
               </select>
-              <input placeholder="Item name (e.g. Rice)" value={newExpense.item} onChange={(e) => setNewExpense({ ...newExpense, item: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
-              <div className="flex gap-2">
-                <input placeholder="Qty (e.g. 1kg)" value={newExpense.qty} onChange={(e) => setNewExpense({ ...newExpense, qty: e.target.value })} className="flex-1 px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
-                <input placeholder="Unit Price (₵)" type="number" value={newExpense.unitPrice} onChange={(e) => setNewExpense({ ...newExpense, unitPrice: e.target.value })} className="flex-1 px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground uppercase">Items</span>
+                  <button onClick={addLineItem} className="flex items-center gap-1 text-xs text-accent font-medium">
+                    <Plus size={14} /> Add Item
+                  </button>
+                </div>
+                {lineItems.map((li, idx) => (
+                  <div key={li.id} className="flex gap-2 items-center">
+                    <input 
+                      placeholder={`Item ${idx + 1}`} 
+                      value={li.item} 
+                      onChange={(e) => updateLineItem(li.id, "item", e.target.value)} 
+                      className="flex-[2] px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                    />
+                    <input 
+                      placeholder="Qty" 
+                      value={li.qty} 
+                      onChange={(e) => updateLineItem(li.id, "qty", e.target.value)} 
+                      className="flex-1 px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                    />
+                    <input 
+                      placeholder="₵" 
+                      type="number" 
+                      value={li.unitPrice} 
+                      onChange={(e) => updateLineItem(li.id, "unitPrice", e.target.value)} 
+                      className="flex-1 px-3 py-2 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+                    />
+                    {lineItems.length > 1 && (
+                      <button onClick={() => removeLineItem(li.id)} className="p-2 text-muted-foreground hover:text-destructive">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-              <input placeholder="Note (optional)" value={newExpense.note} onChange={(e) => setNewExpense({ ...newExpense, note: e.target.value })} className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" />
-              {calculatedTotal > 0 && (
-                <div className="flex justify-between items-center px-1 py-2 text-sm">
-                  <span className="text-muted-foreground">Total Amount:</span>
-                  <span className="font-bold text-destructive">₵{calculatedTotal.toFixed(2)}</span>
+
+              <input 
+                placeholder="Note (optional)" 
+                value={note} 
+                onChange={(e) => setNote(e.target.value)} 
+                className="w-full px-3 py-2.5 rounded-lg bg-secondary text-sm outline-none focus:ring-2 focus:ring-accent/30" 
+              />
+
+              {grandTotal > 0 && (
+                <div className="flex justify-between items-center px-1 py-2 text-sm border-t border-border pt-3">
+                  <span className="text-muted-foreground">Total ({lineItems.filter(li => Number(li.unitPrice) > 0).length} items):</span>
+                  <span className="font-bold text-destructive text-lg">₵{grandTotal.toFixed(2)}</span>
                 </div>
               )}
               <button onClick={handleAdd} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Save Expense</button>
