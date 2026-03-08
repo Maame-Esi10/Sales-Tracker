@@ -50,23 +50,16 @@ const paymentIcon = (method: string) => {
 
 const SalesPage = () => {
   const { items: menuItems } = useMenuItems();
-  const { staff, addStaff, removeStaff } = useStaff();
   const { sales, addSale } = useSales();
+  const { displayName } = useAuth();
 
   const [showNewSale, setShowNewSale] = useState(false);
   const [customerType, setCustomerType] = useState("Walk-in");
-  const [selectedWaiter, setSelectedWaiter] = useState("");
   const [orderItems, setOrderItems] = useState<{ name: string; price: number; qty: number }[]>([]);
   const [receiptSale, setReceiptSale] = useState<SaleWithItems | null>(null);
   const [detailSale, setDetailSale] = useState<SaleWithItems | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "MoMo" | "Card">("Cash");
   const [period, setPeriod] = useState("Today");
-
-  const [editingStaff, setEditingStaff] = useState(false);
-  const [newStaffName, setNewStaffName] = useState("");
-
-  // Default waiter selection
-  const waiterName = selectedWaiter || (staff.length > 0 ? staff[0].name : "");
 
   const getItemQty = (name: string) => orderItems.find((i) => i.name === name)?.qty || 0;
 
