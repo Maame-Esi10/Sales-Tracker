@@ -271,8 +271,8 @@ const SalesPage = () => {
   const filtered = filterByPeriod(sales, period, customDate);
   const periodTotal = filtered.reduce((s, sale) => s + Number(sale.total), 0);
 
-  return (
-    <div className="min-h-screen pb-24">
+    <PullToRefresh containerRef={containerRef} pullDistance={pullDistance} refreshing={refreshing}>
+      <div className="pb-24">
       <PageHeader
         title="Sales"
         action={
