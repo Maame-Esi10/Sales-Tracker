@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { useOfflineCache, getCachedData } from "./useOfflineCache";
 
 export type MenuItemRow = Tables<"menu_items">;
 export type StaffRow = Tables<"staff">;
@@ -14,7 +15,7 @@ export interface SaleWithItems extends SaleRow {
 
 // ---- Menu Items ----
 export function useMenuItems() {
-  const [items, setItems] = useState<MenuItemRow[]>([]);
+  const [items, setItems] = useState<MenuItemRow[]>(() => getCachedData<MenuItemRow[]>("menu_items") || []);
   const [loading, setLoading] = useState(true);
 
   const fetch = useCallback(async () => {
@@ -52,6 +53,8 @@ export function useMenuItems() {
     await supabase.from("menu_items").delete().eq("id", id);
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
+
+  useOfflineCache("menu_items", items, !loading);
 
   return { items, loading, addItem, updateItem, deleteItem, refetch: fetch };
 }
@@ -96,7 +99,7 @@ export function useStaff() {
 
 // ---- Sales ----
 export function useSales() {
-  const [sales, setSales] = useState<SaleWithItems[]>([]);
+  const [sales, setSales] = useState<SaleWithItems[]>(() => getCachedData<SaleWithItems[]>("sales") || []);
   const [loading, setLoading] = useState(true);
 
   const fetch = useCallback(async () => {
@@ -166,6 +169,8 @@ export function useSales() {
     }
     return null;
   };
+
+  useOfflineCache("sales", sales, !loading);
 
   return { sales, loading, addSale, refetch: fetch };
 }
