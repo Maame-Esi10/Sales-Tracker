@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ReceiptView from "@/components/ReceiptView";
 import OrderDetailView from "@/components/OrderDetailView";
+import PullToRefresh from "@/components/PullToRefresh";
 import { useMenuItems, useSales, type SaleWithItems } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import PeriodFilter from "@/components/PeriodFilter";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 const filterByPeriod = (sales: SaleWithItems[], period: string, customDate?: Date): SaleWithItems[] => {
   if (period === "Custom" && customDate) {
