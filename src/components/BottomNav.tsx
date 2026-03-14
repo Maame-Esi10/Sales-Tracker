@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, ChefHat, BarChart3, BookOpen, Receipt, UserCircle } from "lucide-react";
+import { Store, Flame, PieChart, UtensilsCrossed, Wallet, CircleUserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 
