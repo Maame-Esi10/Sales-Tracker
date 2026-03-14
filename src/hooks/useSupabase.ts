@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { useOfflineCache, getCachedData } from "./useOfflineCache";
 
 export type MenuItemRow = Tables<"menu_items">;
 export type StaffRow = Tables<"staff">;
