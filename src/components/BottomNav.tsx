@@ -4,12 +4,12 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 
 const allTabs = [
-  { path: "/", label: "Sales", icon: ShoppingBag, roles: ["admin", "staff"] },
-  { path: "/kitchen", label: "Kitchen", icon: ChefHat, roles: ["admin", "staff"] },
-  { path: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin"] },
-  { path: "/menu", label: "Menu", icon: BookOpen, roles: ["admin", "staff"] },
-  { path: "/expenses", label: "Expenses", icon: Receipt, roles: ["admin"] },
-  { path: "/profile", label: "Profile", icon: UserCircle, roles: ["admin", "staff"] },
+  { path: "/", label: "Sales", icon: Store, roles: ["admin", "staff"] },
+  { path: "/kitchen", label: "Kitchen", icon: Flame, roles: ["admin", "staff"] },
+  { path: "/analytics", label: "Analytics", icon: PieChart, roles: ["admin"] },
+  { path: "/menu", label: "Menu", icon: UtensilsCrossed, roles: ["admin", "staff"] },
+  { path: "/expenses", label: "Expenses", icon: Wallet, roles: ["admin"] },
+  { path: "/profile", label: "Profile", icon: CircleUserRound, roles: ["admin", "staff"] },
 ];
 
 const BottomNav = () => {
