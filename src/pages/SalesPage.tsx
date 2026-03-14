@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ReceiptView from "@/components/ReceiptView";
 import OrderDetailView from "@/components/OrderDetailView";
+import PullToRefresh from "@/components/PullToRefresh";
 import { useMenuItems, useSales, type SaleWithItems } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import PeriodFilter from "@/components/PeriodFilter";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 const filterByPeriod = (sales: SaleWithItems[], period: string, customDate?: Date): SaleWithItems[] => {
   if (period === "Custom" && customDate) {
@@ -59,9 +61,13 @@ const paymentIcon = (method: string) => {
 };
 
 const SalesPage = () => {
-  const { items: menuItems } = useMenuItems();
-  const { sales, addSale } = useSales();
+  const { items: menuItems, refetch: refetchMenu } = useMenuItems();
+  const { sales, addSale, refetch: refetchSales } = useSales();
   const { displayName } = useAuth();
+
+  const { containerRef, pullDistance, refreshing } = usePullToRefresh({
+    onRefresh: async () => { await Promise.all([refetchMenu(), refetchSales()]); },
+  });
 
   const [showNewSale, setShowNewSale] = useState(false);
   const [customerType, setCustomerType] = useState("Walk-in");
@@ -266,7 +272,8 @@ const SalesPage = () => {
   const periodTotal = filtered.reduce((s, sale) => s + Number(sale.total), 0);
 
   return (
-    <div className="min-h-screen pb-24">
+    <PullToRefresh containerRef={containerRef} pullDistance={pullDistance} refreshing={refreshing}>
+      <div className="pb-24">
       <PageHeader
         title="Sales"
         action={
@@ -337,7 +344,8 @@ const SalesPage = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 
