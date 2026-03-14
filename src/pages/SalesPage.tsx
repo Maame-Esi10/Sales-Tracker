@@ -61,9 +61,13 @@ const paymentIcon = (method: string) => {
 };
 
 const SalesPage = () => {
-  const { items: menuItems } = useMenuItems();
-  const { sales, addSale } = useSales();
+  const { items: menuItems, refetch: refetchMenu } = useMenuItems();
+  const { sales, addSale, refetch: refetchSales } = useSales();
   const { displayName } = useAuth();
+
+  const { containerRef, pullDistance, refreshing } = usePullToRefresh({
+    onRefresh: async () => { await Promise.all([refetchMenu(), refetchSales()]); },
+  });
 
   const [showNewSale, setShowNewSale] = useState(false);
   const [customerType, setCustomerType] = useState("Walk-in");
