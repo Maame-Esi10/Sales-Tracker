@@ -54,6 +54,8 @@ export function useMenuItems() {
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
+  useOfflineCache("menu_items", items, !loading);
+
   return { items, loading, addItem, updateItem, deleteItem, refetch: fetch };
 }
 
