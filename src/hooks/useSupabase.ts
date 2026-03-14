@@ -170,6 +170,8 @@ export function useSales() {
     return null;
   };
 
+  useOfflineCache("sales", sales, !loading);
+
   return { sales, loading, addSale, refetch: fetch };
 }
 
