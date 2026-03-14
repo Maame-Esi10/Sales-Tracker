@@ -99,7 +99,7 @@ export function useStaff() {
 
 // ---- Sales ----
 export function useSales() {
-  const [sales, setSales] = useState<SaleWithItems[]>([]);
+  const [sales, setSales] = useState<SaleWithItems[]>(() => getCachedData<SaleWithItems[]>("sales") || []);
   const [loading, setLoading] = useState(true);
 
   const fetch = useCallback(async () => {
