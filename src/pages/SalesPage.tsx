@@ -343,7 +343,6 @@ const SalesPage = () => {
           )}
         </div>
       </div>
-      </div>
     </PullToRefresh>
   );
 };
