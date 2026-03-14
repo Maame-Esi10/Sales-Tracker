@@ -15,7 +15,7 @@ export interface SaleWithItems extends SaleRow {
 
 // ---- Menu Items ----
 export function useMenuItems() {
-  const [items, setItems] = useState<MenuItemRow[]>([]);
+  const [items, setItems] = useState<MenuItemRow[]>(() => getCachedData<MenuItemRow[]>("menu_items") || []);
   const [loading, setLoading] = useState(true);
 
   const fetch = useCallback(async () => {
