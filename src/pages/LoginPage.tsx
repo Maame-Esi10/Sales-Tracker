@@ -19,6 +19,15 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const rainDrops = useMemo(() => 
+    [...Array(8)].map((_, i) => ({
+      height: 10 + Math.random() * 16,
+      left: `${10 + Math.random() * 80}%`,
+      duration: 1.5 + Math.random(),
+      delay: Math.random() * 2,
+    })), []
+  );
+
   if (!authLoading && user) return <Navigate to="/" replace />;
 
   const handleLogin = async (e: React.FormEvent) => {
