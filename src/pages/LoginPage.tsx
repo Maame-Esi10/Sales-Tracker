@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Coffee, ArrowLeft, Shield, User } from "lucide-react";
@@ -18,6 +18,15 @@ const LoginPage = () => {
   const [selectedRole, setSelectedRole] = useState<AppRole>("staff");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const rainDrops = useMemo(() => 
+    [...Array(8)].map((_, i) => ({
+      height: 10 + Math.random() * 16,
+      left: `${10 + Math.random() * 80}%`,
+      duration: 1.5 + Math.random(),
+      delay: Math.random() * 2,
+    })), []
+  );
 
   if (!authLoading && user) return <Navigate to="/" replace />;
 
@@ -73,20 +82,20 @@ const LoginPage = () => {
       }}
     >
       {/* Rain effect */}
-      {[...Array(8)].map((_, i) => (
+      {rainDrops.map((drop, i) => (
         <motion.div
           key={i}
           className="absolute w-0.5 rounded-full"
           style={{
-            height: 10 + Math.random() * 16,
-            left: `${10 + Math.random() * 80}%`,
+            height: drop.height,
+            left: drop.left,
             background: "linear-gradient(to bottom, hsl(270 70% 65% / 0.4), transparent)",
           }}
           initial={{ top: "-5%", opacity: 0 }}
           animate={{ top: "105%", opacity: [0, 0.6, 0] }}
           transition={{
-            duration: 1.5 + Math.random(),
-            delay: Math.random() * 2,
+            duration: drop.duration,
+            delay: drop.delay,
             repeat: Infinity,
             ease: "linear",
           }}
