@@ -82,20 +82,20 @@ const LoginPage = () => {
       }}
     >
       {/* Rain effect */}
-      {[...Array(8)].map((_, i) => (
+      {rainDrops.map((drop, i) => (
         <motion.div
           key={i}
           className="absolute w-0.5 rounded-full"
           style={{
-            height: 10 + Math.random() * 16,
-            left: `${10 + Math.random() * 80}%`,
+            height: drop.height,
+            left: drop.left,
             background: "linear-gradient(to bottom, hsl(270 70% 65% / 0.4), transparent)",
           }}
           initial={{ top: "-5%", opacity: 0 }}
           animate={{ top: "105%", opacity: [0, 0.6, 0] }}
           transition={{
-            duration: 1.5 + Math.random(),
-            delay: Math.random() * 2,
+            duration: drop.duration,
+            delay: drop.delay,
             repeat: Infinity,
             ease: "linear",
           }}
