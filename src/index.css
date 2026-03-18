@@ -95,6 +95,11 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'DM Sans', system-ui, sans-serif;
+    overflow-y: scroll;
+  }
+
+  body.no-scroll {
+    overflow: hidden;
   }
 
   @media print {

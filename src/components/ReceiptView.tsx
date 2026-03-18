@@ -37,7 +37,13 @@ const ReceiptView = ({ orderId, items, total, method, customerType, waiter, date
     ].join("\n");
 
     if (navigator.share) {
-      try { await navigator.share({ title: `Receipt ${orderId}`, text }); } catch {}
+      try {
+        await navigator.share({ title: `Receipt ${orderId}`, text });
+      } catch {
+        // User cancelled or share failed; fall back to clipboard.
+        await navigator.clipboard.writeText(text);
+        alert("Receipt copied to clipboard!");
+      }
     } else {
       await navigator.clipboard.writeText(text);
       alert("Receipt copied to clipboard!");
@@ -48,11 +54,32 @@ const ReceiptView = ({ orderId, items, total, method, customerType, waiter, date
     <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
       <div className="w-full max-w-md bg-card rounded-2xl shadow-card overflow-hidden print:shadow-none print:rounded-none">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border print:hidden">
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors"><X size={20} /></button>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-secondary transition-colors"
+            aria-label="Close receipt"
+            title="Close receipt"
+          >
+            <X size={20} />
+          </button>
           <span className="text-base font-semibold">Receipt</span>
           <div className="flex gap-1">
-            <button onClick={handleShare} className="p-2 rounded-lg hover:bg-secondary transition-colors"><Share2 size={18} /></button>
-            <button onClick={handlePrint} className="p-2 rounded-lg hover:bg-secondary transition-colors"><Printer size={18} /></button>
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-lg hover:bg-secondary transition-colors"
+              aria-label="Share receipt"
+              title="Share receipt"
+            >
+              <Share2 size={18} />
+            </button>
+            <button
+              onClick={handlePrint}
+              className="p-2 rounded-lg hover:bg-secondary transition-colors"
+              aria-label="Print receipt"
+              title="Print receipt"
+            >
+              <Printer size={18} />
+            </button>
           </div>
         </div>
 

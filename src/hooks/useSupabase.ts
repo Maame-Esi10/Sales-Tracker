@@ -13,6 +13,10 @@ export interface SaleWithItems extends SaleRow {
   items: SaleItemRow[];
 }
 
+type SaleRowWithJoinedItems = SaleRow & {
+  sale_items?: SaleItemRow[] | null;
+};
+
 // ---- Menu Items ----
 export function useMenuItems() {
   const [items, setItems] = useState<MenuItemRow[]>(() => getCachedData<MenuItemRow[]>("menu_items") || []);
@@ -109,10 +113,13 @@ export function useSales() {
       .order("created_at", { ascending: false });
     if (data) {
       setSales(
-        data.map((s: any) => ({
-          ...s,
-          items: s.sale_items || [],
-        }))
+        (data as SaleRowWithJoinedItems[]).map((s) => {
+          const { sale_items, ...sale } = s;
+          return {
+            ...(sale as SaleRow),
+            items: sale_items ?? [],
+          };
+        }),
       );
     }
     setLoading(false);

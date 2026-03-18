@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import PullToRefresh from "@/components/PullToRefresh";
+import type { MenuItemRow } from "@/hooks/useSupabase";
 import { useMenuItems } from "@/hooks/useSupabase";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
@@ -48,7 +49,7 @@ const MenuPage = () => {
     resetForm();
   };
 
-  const handleEdit = (item: typeof items[0]) => {
+  const handleEdit = (item: MenuItemRow) => {
     setEditingId(item.id);
     setFormData({ name: item.name, price: String(item.price), category: item.category, cost: String(item.cost) });
     setShowAdd(true);
@@ -109,7 +110,12 @@ const MenuPage = () => {
               <div className="glass shadow-card rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm font-bold text-display">{editingId ? "Edit Item" : "New Item"}</span>
-                  <button onClick={resetForm} className="p-1.5 rounded-lg hover:bg-secondary transition-colors">
+                  <button
+                    onClick={resetForm}
+                    className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
+                    aria-label="Close item form"
+                    title="Close item form"
+                  >
                     <X size={16} className="text-muted-foreground" />
                   </button>
                 </div>
@@ -146,6 +152,8 @@ const MenuPage = () => {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl bg-secondary/70 text-sm outline-none"
+                    aria-label="Menu item category"
+                    title="Menu item category"
                   >
                     {categories.filter((c) => c !== "All").map((c) => <option key={c}>{c}</option>)}
                   </select>
@@ -211,9 +219,9 @@ const MenuPage = () => {
 
 // Extracted card component for cleaner layout
 interface MenuItemCardProps {
-  item: { id: string; name: string; price: number; cost: number; category: string };
+  item: MenuItemRow;
   index: number;
-  onEdit: (item: any) => void;
+  onEdit: (item: MenuItemRow) => void;
   onDelete: (id: string) => void;
 }
 
@@ -230,7 +238,7 @@ const MenuItemCard = ({ item, index, onEdit, onDelete }: MenuItemCardProps) => {
     >
       <div className="mb-3">
         <div className="text-sm font-bold leading-tight mb-1">{item.name}</div>
-        <div className="text-xl font-bold text-accent" style={{ fontFamily: "'Playfair Display', serif" }}>
+        <div className="text-xl font-bold text-accent text-display">
           ₵{Number(item.price).toFixed(0)}
         </div>
       </div>
@@ -251,6 +259,8 @@ const MenuItemCard = ({ item, index, onEdit, onDelete }: MenuItemCardProps) => {
           <button
             onClick={() => onDelete(item.id)}
             className="py-1.5 px-2.5 rounded-lg hover:bg-destructive/10 text-muted-foreground/50 hover:text-destructive transition-colors"
+            aria-label={`Delete ${item.name}`}
+            title={`Delete ${item.name}`}
           >
             <Trash2 size={12} />
           </button>
