@@ -16,7 +16,10 @@ export default defineConfig(({ mode }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "pwa-192.png", "pwa-512.png"],
+      includeAssets: ["pwa-192.png", "pwa-512.png"],
+      devOptions: {
+        enabled: true,
+      },
       manifest: {
         name: "Purple Rain Coffee POS",
         short_name: "PRC POS",

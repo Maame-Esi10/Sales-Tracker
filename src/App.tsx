@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import SplashScreen from "@/components/SplashScreen";
 import { useAuth } from "@/hooks/useAuth";
+import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import SalesPage from "@/pages/SalesPage";
 import KitchenPage from "@/pages/KitchenPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
@@ -58,6 +59,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <PwaInstallPrompt />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />

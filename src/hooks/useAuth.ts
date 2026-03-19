@@ -50,6 +50,16 @@ export function useAuth() {
     return { error };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    return { error };
+  };
+
   const signUp = async (email: string, password: string, displayName: string, selectedRole: AppRole) => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -77,5 +87,5 @@ export function useAuth() {
 
   const isAdmin = role === "admin";
 
-  return { user, session, loading, role, isAdmin, displayName, signIn, signUp, signOut, resetPassword };
+  return { user, session, loading, role, isAdmin, displayName, signIn, signInWithGoogle, signUp, signOut, resetPassword };
 }
