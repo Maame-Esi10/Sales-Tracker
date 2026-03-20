@@ -21,7 +21,7 @@ const RAIN_DROPS = [
 ] as const;
 
 const LoginPage = () => {
-  const { user, loading: authLoading, signIn, signInWithGoogle, signUp, resetPassword } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, resetPassword } = useAuth();
   const [view, setView] = useState<View>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -81,15 +81,7 @@ const LoginPage = () => {
     setLoading(false);
   };
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
-    }
-    // On success, Supabase will redirect away from this page.
-  };
+
 
   return (
     <div
@@ -164,25 +156,7 @@ const LoginPage = () => {
           onSubmit={view === "login" ? handleLogin : view === "signup" ? handleSignup : handleForgot}
           className="space-y-3"
         >
-          {view === "login" && (
-            <>
-              <button
-                type="button"
-                onClick={handleGoogle}
-                disabled={loading}
-                className="w-full py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 bg-white text-black flex items-center justify-center gap-2"
-                aria-label="Continue with Google"
-                title="Continue with Google"
-              >
-                Continue with Google
-              </button>
-              <div className="flex items-center gap-3 py-1">
-                <div className="h-px flex-1 bg-[hsl(270_30%_22%)]" />
-                <span className="text-[10px] tracking-wider uppercase text-[hsl(270_20%_55%)]">or</span>
-                <div className="h-px flex-1 bg-[hsl(270_30%_22%)]" />
-              </div>
-            </>
-          )}
+
 
           {view === "signup" && (
             <input
