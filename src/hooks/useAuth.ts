@@ -4,6 +4,15 @@ import type { User, Session } from "@supabase/supabase-js";
 
 export type AppRole = "admin" | "staff";
 
+// Determine the correct redirect URL based on environment
+const getRedirectUrl = () => {
+  const isDev = import.meta.env.DEV;
+  if (isDev) {
+    return `http://localhost:${import.meta.env.VITE_PORT || 5173}`;
+  }
+  return "https://purple-rain-sales-tracker.vercel.app";
+};
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -54,7 +63,7 @@ export function useAuth() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: getRedirectUrl(),
       },
     });
     return { error };
@@ -66,7 +75,7 @@ export function useAuth() {
       password,
       options: {
         data: { display_name: displayName, requested_role: selectedRole },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${getRedirectUrl()}`,
       },
     });
     return { error };
@@ -80,7 +89,7 @@ export function useAuth() {
 
   const resetPassword = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${getRedirectUrl()}/reset-password`,
     });
     return { error };
   };
