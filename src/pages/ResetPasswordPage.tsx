@@ -42,14 +42,11 @@ const ResetPasswordPage = () => {
   if (!ready) return null;
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-6"
-      style={{ background: "linear-gradient(165deg, hsl(270 60% 8%), hsl(270 45% 12%), hsl(280 35% 10%))" }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-[linear-gradient(165deg,hsl(270_60%_8%),hsl(270_45%_12%),hsl(280_35%_10%))]">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <img src={logo} alt="Logo" className="w-16 h-16 rounded-2xl mb-4" />
-          <h1 className="text-xl font-bold" style={{ color: "hsl(270 20% 85%)" }}>Set New Password</h1>
+          <h1 className="text-xl font-bold text-[hsl(270_20%_85%)]">Set New Password</h1>
         </div>
         <form onSubmit={handleReset} className="space-y-3">
           <input
@@ -59,8 +56,7 @@ const ResetPasswordPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/40"
-            style={{ background: "hsl(270 30% 16%)", color: "hsl(270 20% 85%)", border: "1px solid hsl(270 30% 22%)" }}
+            className="w-full px-4 py-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent/40 bg-[hsl(270_30%_16%)] text-[hsl(270_20%_85%)] border border-[hsl(270_30%_22%)]"
           />
           <button
             type="submit"
