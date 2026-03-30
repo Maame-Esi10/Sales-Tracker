@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-export type AppRole = "admin" | "staff";
+export type AppRole = "owner" | "staff" | "kitchen";
 
 // Determine the correct redirect URL based on environment
 const getRedirectUrl = () => {
@@ -34,21 +34,23 @@ export function useAuth() {
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         if (session?.user) {
-          setTimeout(() => fetchUserData(session.user.id), 0);
+          fetchUserData(session.user.id);
         } else {
           setRole(null);
           setDisplayName("");
         }
+        setLoading(false);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserData(session.user.id);
+      }
       setLoading(false);
-      if (session?.user) fetchUserData(session.user.id);
     });
 
     return () => subscription.unsubscribe();
@@ -94,7 +96,7 @@ export function useAuth() {
     return { error };
   };
 
-  const isAdmin = role === "admin";
+  const isOwner = role === "owner";
 
-  return { user, session, loading, role, isAdmin, displayName, signIn, signInWithGoogle, signUp, signOut, resetPassword };
+  return { user, session, loading, role, isOwner, displayName, signIn, signInWithGoogle, signUp, signOut, resetPassword };
 }

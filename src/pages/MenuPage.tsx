@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, Loader } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import PageHeader from "@/components/PageHeader";
 import PullToRefresh from "@/components/PullToRefresh";
 import type { MenuItemRow } from "@/hooks/useSupabase";
@@ -37,6 +38,8 @@ const MenuPage = () => {
     return acc;
   }, {} as Record<string, typeof items>);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const resetForm = () => {
     setFormData({ name: "", price: "", category: "Coffee", cost: "" });
     setShowAdd(false);
@@ -44,9 +47,41 @@ const MenuPage = () => {
   };
 
   const handleAdd = async () => {
-    if (!formData.name || !formData.price) return;
-    await addItem({ name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 });
-    resetForm();
+    // Validation
+    if (!formData.name.trim()) {
+      toast.error("Item name is required");
+      return;
+    }
+    if (!formData.price || Number(formData.price) <= 0) {
+      toast.error("Price must be greater than 0");
+      return;
+    }
+    if (!formData.category) {
+      toast.error("Category is required");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await addItem({
+        name: formData.name.trim(),
+        price: Number(formData.price),
+        category: formData.category,
+        cost: Number(formData.cost) || 0,
+      });
+      if (result) {
+        toast.success("Item added successfully");
+        resetForm();
+      } else {
+        toast.error("Failed to add item");
+      }
+    } catch (error) {
+      console.error("Error adding item:", error);
+      const errorMsg = error instanceof Error ? error.message : "Failed to add item";
+      toast.error(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleEdit = (item: MenuItemRow) => {
@@ -56,13 +91,55 @@ const MenuPage = () => {
   };
 
   const handleSaveEdit = async () => {
-    if (!formData.name || !formData.price || !editingId) return;
-    await updateItem(editingId, { name: formData.name, price: Number(formData.price), category: formData.category, cost: Number(formData.cost) || 0 });
-    resetForm();
+    // Validation
+    if (!formData.name.trim()) {
+      toast.error("Item name is required");
+      return;
+    }
+    if (!formData.price || Number(formData.price) <= 0) {
+      toast.error("Price must be greater than 0");
+      return;
+    }
+    if (!editingId) {
+      toast.error("No item selected for editing");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await updateItem(editingId, {
+        name: formData.name.trim(),
+        price: Number(formData.price),
+        category: formData.category,
+        cost: Number(formData.cost) || 0,
+      });
+      if (result) {
+        toast.success("Item updated successfully");
+        resetForm();
+      } else {
+        toast.error("Failed to update item");
+      }
+    } catch (error) {
+      console.error("Error updating item:", error);
+      const errorMsg = error instanceof Error ? error.message : "Failed to update item";
+      toast.error(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await deleteItem(id);
+    setIsLoading(true);
+    try {
+      await deleteItem(id);
+      toast.success("Item deleted successfully");
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      const errorMsg = error instanceof Error ? error.message : "Failed to delete item";
+      toast.error(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

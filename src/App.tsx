@@ -21,9 +21,9 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAdmin, role, loading } = useAuth();
-  if (loading || role === null) return null; // Wait for role to load
-  if (!isAdmin) return <Navigate to="/" replace />;
+  const { isOwner, role } = useAuth();
+  if (role === null) return null; // Wait for role to load
+  if (!isOwner) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 

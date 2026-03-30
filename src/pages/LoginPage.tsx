@@ -139,9 +139,9 @@ const LoginPage = () => {
               <User size={15} /> Staff
             </button>
             <button
-              onClick={() => setSelectedRole("admin")}
+              onClick={() => setSelectedRole("owner")}
               className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all ${
-                selectedRole === "admin"
+                selectedRole === "owner"
                   ? "bg-[hsl(38_60%_30%)] text-[hsl(38_80%_75%)]"
                   : "bg-[hsl(270_30%_14%)] text-[hsl(270_20%_45%)]"
               }`}

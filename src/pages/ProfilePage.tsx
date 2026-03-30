@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const ProfilePage = () => {
-  const { user, role, isAdmin, signOut, resetPassword } = useAuth();
+  const { user, role, isOwner, signOut, resetPassword } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
@@ -102,9 +102,9 @@ const ProfilePage = () => {
           )}
 
           <div className="flex items-center gap-1.5 mt-2">
-            <Shield size={12} className={isAdmin ? "text-warning" : "text-accent"} />
+            <Shield size={12} className={isOwner ? "text-warning" : "text-accent"} />
             <span className="text-xs font-medium text-muted-foreground capitalize">
-              {role === "admin" ? "Owner / Admin" : "Staff"}
+              {role === "owner" ? "Owner" : role === "manager" ? "Manager" : role === "kitchen" ? "Kitchen" : "Staff"}
             </span>
           </div>
         </motion.div>
@@ -172,7 +172,7 @@ const ProfilePage = () => {
             <Shield size={16} className="text-muted-foreground" />
             <div className="flex-1">
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Role</div>
-              <div className="text-sm font-medium capitalize">{role === "admin" ? "Owner (Admin)" : "Staff"}</div>
+              <div className="text-sm font-medium capitalize">{role === "owner" ? "Owner" : role === "manager" ? "Manager" : role === "kitchen" ? "Kitchen" : "Staff"}</div>
             </div>
           </div>
         </motion.div>

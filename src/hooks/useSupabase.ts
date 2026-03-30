@@ -42,19 +42,22 @@ export function useMenuItems() {
   }, [fetch]);
 
   const addItem = async (item: { name: string; price: number; category: string; cost: number }) => {
-    const { data } = await supabase.from("menu_items").insert(item).select().single();
+    const { data, error } = await supabase.from("menu_items").insert(item).select().single();
+    if (error) throw new Error(error.message);
     if (data) setItems((prev) => [...prev, data]);
     return data;
   };
 
   const updateItem = async (id: string, updates: { name?: string; price?: number; category?: string; cost?: number }) => {
-    const { data } = await supabase.from("menu_items").update(updates).eq("id", id).select().single();
+    const { data, error } = await supabase.from("menu_items").update(updates).eq("id", id).select().single();
+    if (error) throw new Error(error.message);
     if (data) setItems((prev) => prev.map((i) => (i.id === id ? data : i)));
     return data;
   };
 
   const deleteItem = async (id: string) => {
-    await supabase.from("menu_items").delete().eq("id", id);
+    const { error } = await supabase.from("menu_items").delete().eq("id", id);
+    if (error) throw new Error(error.message);
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
@@ -88,13 +91,15 @@ export function useStaff() {
   }, [fetch]);
 
   const addStaff = async (name: string) => {
-    const { data } = await supabase.from("staff").insert({ name }).select().single();
+    const { data, error } = await supabase.from("staff").insert({ name }).select().single();
+    if (error) throw new Error(error.message);
     if (data) setStaff((prev) => [...prev, data]);
     return data;
   };
 
   const removeStaff = async (id: string) => {
-    await supabase.from("staff").delete().eq("id", id);
+    const { error } = await supabase.from("staff").delete().eq("id", id);
+    if (error) throw new Error(error.message);
     setStaff((prev) => prev.filter((s) => s.id !== id));
   };
 
@@ -149,7 +154,7 @@ export function useSales() {
     waiter: string;
     items: { name: string; price: number; qty: number }[];
   }) => {
-    const { data: saleData } = await supabase
+    const { data: saleData, error: saleError } = await supabase
       .from("sales")
       .insert({
         order_id: sale.order_id,
@@ -161,6 +166,8 @@ export function useSales() {
       .select()
       .single();
 
+    if (saleError) throw new Error(saleError.message);
+
     if (saleData) {
       const saleItems = sale.items.map((i) => ({
         sale_id: saleData.id,
@@ -168,7 +175,9 @@ export function useSales() {
         price: i.price,
         qty: i.qty,
       }));
-      const { data: itemsData } = await supabase.from("sale_items").insert(saleItems).select();
+      const { data: itemsData, error: itemsError } = await supabase.from("sale_items").insert(saleItems).select();
+
+      if (itemsError) throw new Error(itemsError.message);
 
       const newSale: SaleWithItems = { ...saleData, items: itemsData || [] };
       setSales((prev) => [newSale, ...prev]);
@@ -207,18 +216,21 @@ export function useExpenses() {
   }, [fetch]);
 
   const addExpense = async (expense: { category: string; amount: number; note: string }) => {
-    const { data } = await supabase.from("expenses").insert(expense).select().single();
+    const { data, error } = await supabase.from("expenses").insert(expense).select().single();
+    if (error) throw new Error(error.message);
     if (data) setExpenses((prev) => [data, ...prev]);
     return data;
   };
 
   const deleteExpense = async (id: string) => {
-    await supabase.from("expenses").delete().eq("id", id);
+    const { error } = await supabase.from("expenses").delete().eq("id", id);
+    if (error) throw new Error(error.message);
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
 
   const updateExpense = async (id: string, updates: { category?: string; amount?: number; note?: string }) => {
-    const { data } = await supabase.from("expenses").update(updates).eq("id", id).select().single();
+    const { data, error } = await supabase.from("expenses").update(updates).eq("id", id).select().single();
+    if (error) throw new Error(error.message);
     if (data) setExpenses((prev) => prev.map((e) => (e.id === id ? data : e)));
     return data;
   };
